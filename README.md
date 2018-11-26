@@ -9,7 +9,7 @@ bit of a design process and produce a consensus among the Ursa community and
 the [sub-team]s.
 
 The "RFC" (request for comments) process is intended to provide a consistent
-and controlled path for major changes to enter Ursa Core and other official
+and controlled path for major changes to enter Ursa and other official
 project components, so that all stakeholders can be confident about the
 direction Ursa is evolving in.
 
@@ -38,11 +38,9 @@ RFCs](https://github.com/rust-lang/rfcs).
 [When you need to follow this process]: #when-you-need-to-follow-this-process
 
 You need to follow this process if you intend to make "substantial" changes to
-Ursa or any of its sub-components including but not limited to Ursa
-Core, Ursa Supply Chain, Ursa Seth, the various Ursa SDKs, or the
-RFC process itself. What constitutes a "substantial" change is evolving based
-on community norms and varies depending
-on what part of the ecosystem you are proposing to change, but may include the
+Ursa or any of its sub-components or the  RFC process itself. What constitutes a
+"substantial" change is evolving based on community norms and varies depending
+on what part of the project you are proposing to change, but may include the
 following.
 
   - Architectural changes
