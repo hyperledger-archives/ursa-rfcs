@@ -47,6 +47,9 @@ following.
   - New core features
   - Backward incompatible changes
   - Changes that affect the security of communications or administration
+  - New Protocols
+  - New implementations of existing protocols 
+    (as they may have different security properties)
 
 Some changes do not require an RFC:
 
