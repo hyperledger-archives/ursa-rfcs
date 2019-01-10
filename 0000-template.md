@@ -2,6 +2,7 @@
 - Start Date: (fill me in with today's date, YYYY-MM-DD)
 - RFC PR: (leave this empty)
 - Ursa Issue: (leave this empty)
+- Version: (use whole numbers: 1, 2, 3, etc)
 
 # Summary
 [summary]: #summary
@@ -89,3 +90,8 @@ readers of your RFC with a fuller picture.
 - What related issues do you consider out of scope for this RFC that could be
   addressed in the future independently of the solution that comes out of this
   RFC?
+
+# Changelog
+[changelog]: #changelog
+
+- [10 Jan 2019] - v2 - a one-line summary of the changes in this version.
