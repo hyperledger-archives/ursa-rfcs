@@ -1,0 +1,38 @@
+@startuml
+
+actor Alice as a
+participant "Libzmix" as z
+database "Public\nCrypto\nData" as p
+actor Bob as b
+
+note over a, b
+<b>PR, PO, PF</b> are outside the scope of zmix
+
+end note
+b -> a: <b>PR</b> = proof request
+note right
+Bob can store this somewhere public
+or generate each time
+end note
+opt
+a --> b: <b>PO</b> = proof offer
+end
+a -> a: <b>PF</b> = proof fulfillment
+note right
+Application helps Alice decide
+end note
+a -> p: <b>PD</b> = public data
+a -> a: Proof Spec = <b>PD + PR + PF</b>
+== ZMix ==
+
+a -> z: Proof Spec + Witness
+z -> a: Proof
+
+a -> b: <b>PF</b>, Proof
+b -> p: <b>PD</b> = public data
+b -> b: Proof Spec = <b>PD + PR + PF</b>
+b -> z: <b>PD</b> + Proof
+z -> b: accept or reject
+
+
+@enduml
