@@ -38,31 +38,28 @@ Secret key encryption uses the same key to encrypt and decrypt. It is only share
 Users will create keys using one of these two types and pass them to the appropriate method.
 Rust typing will prevent a user from passing a secret key to a public key encryption method and visa versa.
 
-Public-Key encryption methods MUST use the naming convention **ALGORITHM or CURVE{SIZE}-SCHEME**. Below are some examples
+Public-Key encryption methods MUST use the naming convention **FUNCTION-SCHEME-PARAMETERS**. Below are some examples
 that could be implemented:
 
 - Rsa2048Oaep
     - Encryption with an RSA 2048 bit public key using [Optimal Asymmetric Encryption](https://tools.ietf.org/html/rfc8017#section-7.1).
     - Decryption with an RSA 2048 bit private key.
     - This method does not use a MAC or authentication tag.
-- X25519Chacha20Poly1305
-    - Encryption with shared secret derived from X25519 public key and ephemeral X25519 private key using CHACHA-POLY1305.
-    - Decryption with shared secret derived from X25519 private key and ephemeral X25519 public key using CHACHA-POLY1305.
-    - Uses authentication tag.
 
-Secret-key encryption methods MUST use the naming convention **ALGORITHM{SIZE}{-MAC}**. Below are some examples
+Secret-key encryption methods MUST use the naming convention **FUNCTION-SCHEME-PARAMETERS**. Below are some examples
 that could be implemented:
 
 - Aes256Gcm
 - Chacha20Poly1305
 - Twofish256CbcHmacSha2_256
-- Blowfish448CbcHmacSha2_256
+- Blowfish448HmacSha2_256
 
-Secret-key encryption methods require the use of *nonces* or *initialization vectors (iv)*, the two terms are often used interchangeably.
-We use the term *nonce* here. Nonces must be unique for a given key and message pair to be prevent certain types of attacks.
+Secret-key encryption methods generally require the use of *nonces* or *initialization vectors (iv)*, the two terms are often used interchangeably.
+We use the term *nonce* here. Nonces must be unique for a given key and message pair for certain encryption schemes to be prevent certain types of attacks.
 To simplify the interfaces for Ursa users, *nonce* generation will be handled by Ursa and not a required concern for developers.
+A lower level layer can expose this for more advanced crypto consumption like key homomorphic PRFs where nonce reuse might be desirable.
 
-Authenticated encryption methods are strongly preferred and any other methods should be considered hazardous materials–only used by those who know what they are doing.
+Authenticated encryption methods are strongly preferred and any other methods should be considered lower level–only used by those who know what they are doing.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -77,8 +74,8 @@ Rust structs and traits will look and work like so:
 pub trait PublicKeyEncryptionScheme {
     fn new() -> Self;
     fn keypair(&self, options: Option<KeyGenOption>) -> Result<(PublicKey, PrivateKey), CryptoError>;
-    fn seal(&self, plaintext: &[u8], pk: &PublicKey) -> Result<Vec<u8>, CryptoError>;
-    fn open(&self, ciphertext: &[u8], sk: &PrivateKey) -> Result<Vec<u8>, CryptoError>;
+    fn encrypt(&self, plaintext: &[u8], pk: &PublicKey) -> Result<Vec<u8>, CryptoError>;
+    fn decrypt(&self, ciphertext: &[u8], sk: &PrivateKey) -> Result<Vec<u8>, CryptoError>;
     fn private_key_size() -> usize;
     fn public_key_size() -> usize;
 }
@@ -86,17 +83,12 @@ pub trait PublicKeyEncryptionScheme {
 pub trait SecretKeyEncryptionScheme {
     fn new() -> Self;
     fn genkey(&self, options: Option<KeyGenOption>) -> Result<SecretKey, CryptoError>;
-    fn seal(&self, plaintext: &[u8], sk: &SecretKey) -> Result<Vec<u8>, CryptoError>;
-    fn open(&self, ciphertext: &[u8], sk: &SecretKey) -> Result<Vec<u8>, CryptoError>;
+    fn encrypt(&self, plaintext: &[u8], sk: &SecretKey) -> Result<Vec<u8>, CryptoError>;
+    fn decrypt(&self, ciphertext: &[u8], sk: &SecretKey) -> Result<Vec<u8>, CryptoError>;
     fn key_size() -> usize;
     fn tag_size() -> usize;
 }
 ```
-
-# Drawbacks
-[drawbacks]: #drawbacks
-
-Encryption could be handled via other methods to avoid algorithm proliferation.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
@@ -122,7 +114,7 @@ It also does not allow for optionally compiling selected algorithms. It doesn't 
 
 [Libsodium](https://libsodium.gitbook.io/doc/) only utilizes Ed25519 curves.
 
-[Openssl](https://www.openssl.org) is a library that has many cryptographic algorithms but the interfaces are complicated and considered hazardous material.
+[Openssl](https://www.openssl.org) is a library that has many cryptographic algorithms but is written in "C".
 
 # Unresolved questions
 [unresolved]: #unresolved-questions
@@ -132,4 +124,5 @@ It also does not allow for optionally compiling selected algorithms. It doesn't 
 # Changelog
 [changelog]: #changelog
 
+- [18 Feb 2019] - v2 - Incorporate changes from Lovesh and HartM
 - [6 Feb 2019] - v1 – Initial draft
