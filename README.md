@@ -94,8 +94,10 @@ merged into the RFC repository as a markdown file. At that point the RFC is
 "active" and may be implemented with the goal of eventual inclusion into Ursa.
 
   - Fork the RFC repo [RFC repository]
-  - Copy `0000-template.md` to `text/0000-my-feature.md` (where "my-feature" is
-    descriptive. don't assign an RFC number yet).
+  - Copy `0000-template.md` to `0000-my-feature.md` (where "my-feature" is
+    descriptive. Don't assign an RFC number yet). 
+  - If the RFC has supporting images or diagram files, also create a folder
+    called `0000-my-feature` and put them there.
   - Fill in the RFC. Put care into the details: RFCs that do not present
     convincing motivation, demonstrate understanding of the impact of the
     design, or are disingenuous about the drawbacks or alternatives tend to be
@@ -147,10 +149,10 @@ merged into the RFC repository as a markdown file. At that point the RFC is
 [The RFC life-cycle]: #the-rfc-life-cycle
 
 Once an RFC becomes "active" then authors may implement it and submit the
-change as a pull request to the corresponding Ursa repo. Being "active" is not a rubber
-stamp, and in particular still does not mean the change will ultimately be
-merged; it does mean that in principle all the major stakeholders have agreed
-to the change and are amenable to merging it.
+change as a pull request to the corresponding Ursa repo. Being "active" is not
+a rubber stamp, and in particular still does not mean the change will
+ultimately be merged; it does mean that in principle all the major stakeholders
+have agreed to the change and are amenable to merging it.
 
 Furthermore, the fact that a given RFC has been accepted and is "active"
 implies nothing about what priority is assigned to its implementation, nor does
