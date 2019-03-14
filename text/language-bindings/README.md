@@ -160,12 +160,12 @@ Here are general guidelines for producing wrappers:
 
 - Thin wrappers
     - Produced by code
-    - Output into the `libursa/wrappers/<language>/ folder
+    - Output into the `libursa/wrappers/<language>/ folder`
     - <language> should follow the naming convention as described [here](https://support.codebasehq.com/articles/tips-tricks/syntax-highlighting-in-markdown)
 - Idiomatic wrappers
     - Written by developers
     - Implemented as best deemed by contributors/community
-    - Stored in separate repositories using the naming convention ursa-<language>
+    - Stored in separate repositories using the naming convention ursa-wrapper-\<language\>
     - Keep certain things invariant
         - The reason is to make wrappers similar to one another, and to avoid unnecessary documentation burden or mental model translation between wrappers (which may have light doc) and ursa (where the investment in doc will be substantial).
         - If someone learns how to use a wrapper of the API in language 1, and then go look at the wrapper of the API in language 2, one should see the same basic concepts, and be able to predict the function names one should call and the sequence of calls one should use.
