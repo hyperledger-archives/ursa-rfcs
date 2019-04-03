@@ -1,0 +1,141 @@
+\def\fullversionflag{1}
+
+\ifodd\fullversionflag
+  \documentclass[letterpaper,11pt]{article}
+\else
+ \documentclass{llncs}
+\fi
+
+\input{flamacro}
+\input{hartm_macro_safe}
+\usepackage{longtable}
+
+\title{Encryption and Interface Ideas for Ursa--DRAFT 1.0}
+\author{Mike Lodder, Hart Montgomery, YOUR NAME HERE}
+
+\begin{document}
+\maketitle
+
+In this document, we describe a philosophy and approach for interfaces for Ursa.  Our primary goals are twofold:  make an interface that is easy for developers skilled in cryptography to customize, but difficult for others to misuse.  To that end, we describe two sets of interfaces:
+
+\paragraph{Developer Interface.}  The external interface will be what the developers who are primarily focused on using cryptography (and are not cryptographic experts) see.  As many details as possible will be hidden from these interfaces.
+
+It should be very difficult for people to misuse this layer and create insecure protocols.
+
+\paragraph{Cryptographer Interface.}  This is the internal interface that will be used by cryptographers (in all senses, both cryptography researchers and cryptography engineers).  Interfaces will be flexible, but as descriptive as possible.  In addition, interfaces (and protocols) will be as \emph{composable} as possible.  Our goal is to make it easy for people to choose which underlying cryptosystems to build their protocols from in this layer.
+
+It will be potentially possible for people to misuse this layer and create insecure protocols, so we want to advise that only experts tamper with these ``hazardous materials.''
+
+\section{Developer Interface}
+Our idea for the naming convention for the external interface is purely functionality-based.  We will start each function with a reminder of the current cryptographic protocol being implemented camel case.  So this will be something like PublicKeyEncryptor, for a public key encryption protocol and Encryptor for symmetric key encryption.
+
+Functions belonging to each type of protocol will be listed after the designation of the protocol as snake case.  For PublicKeyEncryptor, this would be things like key\_gen, encrypt, and decrypt.  So an example interface would look like the following:
+
+\begin{verbatim}
+pub struct PublicKeyEncryptor {
+    fn new(params: PublicKeyEncryptorParams) -> Self;
+    fn key_gen(&self) -> Result<(PublicKey, PrivateKey), Error>;
+    fn encrypt(&self, pk: &PublicKey, in: &[u8]) -> Vec<u8>;
+    fn encrypt_buffer(&self, pk: &PublicKey, in: &BufReader, out: &BufWriter);
+    fn decrypt(&self, sk: &PrivateKey, in: &[u8]) -> Result<Vec<u8>, Error>;
+    fn decrypt_buffer(&self, pk: &PublicKey, in: &BufReader, out: &BufWriter) -> Result<bool, Error>;
+}
+
+pub struct Encryptor {
+    fn new(params: EncryptorParams) -> Self;
+    fn key_gen(&self) -> Result<Key, Error>;
+    fn encrypt(&self, headers: Option<&[u8]>, plaintext: &[u8], key: &Key) -> Vec<u8>;
+    fn encrypt_buffer(&self, headers: Option<&[u8]>, in: &BufReader, key: &Key, out: &BufWriter);
+    fn decrypt(&self, headers: Option<&[u8]>, in: &[u8], key: &Key) -> Result<Vec<u8>, Error>;
+    fn decrypt_buffer(&self, headers: Option<&[u8], in: &BufReader, key: &Key, out: &BufWriter) -> Result<bool, Error>;
+}
+\end{verbatim}
+
+In this case, PublicKeyEncryptorParams would denote pre-specified configurations of algorithms that a developer could use.  For the external user, this would typically be a single, simple string and not get into the algorithmic details.  As an example, there could be PublicKeyEncryptorParams::IndyDefault , which a external user would not need to know anything about.  In addition, this interface would make it very easy for a user to change their implementations--only the call to the ``new'' function would need to be modified.
+
+
+\section{Cryptographer Interface}
+Internally, we will have many different algorithms used to implement the same overall cryptosystems.  For instance, we may have both an LWE-based key exchange as well as a traditional elliptic curve-based Diffie-Hellman protocol.  To do this, we will need to use slightly different naming conventions as well as exploit modularity.
+
+We propose the following naming convention:
+\begin{verbatim}
+Cryptosystem-algorithm-parameters-function
+\end{verbatim}
+
+In this naming convention, cryptosystem describes the overall scheme being defined.  For instance, things like ``PublicKeyEncryptor,'' ``MAC,'' and ``AUTH-ENCRYPT'' would all be acceptable fields here.  The field ``algorithm'' describes the exact algorithm or paper that is being implemented.  For instance, something like ``bls-sig'' could go here.  ``PARAMETERS'' describes \emph{all} of the relevant parameters of the scheme.  This includes things like security parameters, groups, moduli sizes, and \emph{other dependencies} such as hash functions or other primitives that are used in the construction of the overall cryptosystem.
+
+Perhaps the best way to see how this might work is an example:  OCB authenticated encryption.
+
+\begin{verbatim}
+
+pub trait AEADCipher {
+    const NoneSize: usize;
+    const KeySize: usize;
+    const TagSize: usize;
+    
+    fn encrypt(&self, key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize], additional_data: &[u8], data: &[u8]) -> Vec<u8>;
+    fn encrypt_buffer(&self, key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize], additional_data: &[u8], in: &BufReader, out: &BufReader);
+    fn decrypt(&self, key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize], additional_data: &[u8], data: &[u8]) -> Result<Vec<u8>, Error>;
+    fn decrypt_buffer(&self, key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize], additional_data: &[u8], in: &BufReader, out: &BufReader) -> Result<bool, Error>;
+}
+
+pub trait StreamCipher {
+    const KeySize: usize;
+    const NonceSize: usize;
+
+    fn init(key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize])
+    fn encrypt(data: &mut [u8]) // encrypt in place
+    fn decrypt(data: &mut [u8]) // for synchronous ciphers this is the same 
+}
+
+pub trait BlockCipher {
+    fn init(key: &[u8; Self::KeySize], nonce: &[u8; Self::NonceSize])
+    fn encrypt_block(block: &mut [u8; Self::BlockSize) //encrypt in place
+    fn encrypt_blocks(blocks: &mut [[u8; Self::BlockSize], Self::ParallelBlocks]) //encrypt blocks in parallel
+    fn decrypt_block(block: &mut [u8; Self::BlockSize) //decrypt in place
+    fn decrypt_blocks(blocks: &mut [[u8; Self::BlockSize], Self::ParallelBlocks]) //decrypt blocks in parallel
+}
+
+pub trait OCB<T: BlockCipher>: AEADCipher {
+    type Output;
+    fn new(cipher: T) -> Self::Output;
+}
+
+pub trait GCM<T: BlockCipher>: AEADCipher {
+    type Output;
+    fn new(cipher: T) -> Self::Output;
+}
+
+pub trait AES-128 {
+    ...
+}
+
+pub trait SM4 {
+    ...
+}
+
+
+\end{verbatim}
+
+Note that here we are building OCB with a modularized blockcipher.  While modular code is nice, we might have some optimized code that is defined in the following way:
+
+\begin{verbatim}
+pub struct SymmetricEncryption<A> where A:  AEADCipher {
+}
+
+pub type AES128GCM = SymmtricEncryption<GCM<AES128>>;
+pub type AES256OCB = SymmetricEncryption<OCB<AES256>>;
+\end{verbatim}
+
+Note that the interface is almost exactly the same, but we need fewer parameters for the more specific function.  In particular, we don't need to provide a reference to a 128-bit blockcipher since we would be hard-coding AES into our implementation here.
+
+\section{Between the Two Interfaces}
+The beauty of this kind of system is the ability to hide the internal interface behind the external one.  For instance, the following describes key generation in openSSL:  \url{https://github.com/openssl/openssl/blob/master/doc/HOWTO/keys.txt}.  RSA and elliptic curve keys have to be generated in a completely different way.  This is something that we do not want to have burden our blockchain developers, who may not be comfortable enough with cryptography to do something like this.
+
+The only difficult thing we are pushing to the general developers is the ``params'' when calling a new function.  However, these can be explicitly defined in simple ways by cryptographers.  For instance, we used the example ``INDY-DEFAULT'' earlier.  Someone could develop a set of parameters that are the default for Indy, define them, and allow everyone else to use them in a simple call.
+
+When the ``new'' function is called on the external interface, it will use the ``params'' to pick out which protocols from the internal interface to use and create an appropriate instance.  Since we can store state in our \emph{self} object, we can keep track of the parameters here.  This way, a developer that wants to change between different algorithms only has to modify the ``params'' on the cryptosystem description. 
+
+
+\end{document} 
+
