@@ -106,14 +106,27 @@ pub trait GCM<T: BlockCipher>: AEADCipher {
     fn new(cipher: T) -> Self::Output;
 }
 
+pub trait NonceGenerator {
+    gn gen_nonce(size: usize) -> Vec<u8>; 
+}
+
 pub trait AES-128 {
     ...
+}
+
+impl <E: BlockCipher> NonceGenerator for E {
+    fn gen_nonce(size: usize) -> Vec<u8>  {
+        ...
+    }
+}
+
+impl <E: StreamCipher> NonceGenerator for E {
+    fn gen_nonce(size: usize) -> Vec<u8>
 }
 
 pub trait SM4 {
     ...
 }
-
 
 \end{verbatim}
 
@@ -129,6 +142,8 @@ pub type AES256OCB = SymmetricEncryption<OCB<AES256>>;
 
 Note that the interface is almost exactly the same, but we need fewer parameters for the more specific function.  In particular, we don't need to provide a reference to a 128-bit blockcipher since we would be hard-coding AES into our implementation here.
 
+The idea for encryption APIs is to have many traits that can be mixed and matched to compose fixed implementations.
+
 \section{Between the Two Interfaces}
 The beauty of this kind of system is the ability to hide the internal interface behind the external one.  For instance, the following describes key generation in openSSL:  \url{https://github.com/openssl/openssl/blob/master/doc/HOWTO/keys.txt}.  RSA and elliptic curve keys have to be generated in a completely different way.  This is something that we do not want to have burden our blockchain developers, who may not be comfortable enough with cryptography to do something like this.
 
@@ -138,4 +153,3 @@ When the ``new'' function is called on the external interface, it will use the `
 
 
 \end{document} 
-
