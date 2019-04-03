@@ -1,0 +1,92 @@
+%\documentclass[orivec]{llncs}
+
+\ifodd\fullversionflag
+  \usepackage{fullpage}
+  \usepackage[a4paper,hmargin=2.5cm,vmargin=3cm]{geometry}
+  %\pagestyle{headings} %comment this out in the final versions
+\else
+\fi
+
+\ifodd\fullversionflag
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\else
+\usepackage{amsmath,amssymb,amsfonts} %,amsthm}
+\fi
+
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{algorithm,algorithmic,verbatim}
+\usepackage{thmtools, thm-restate}
+\usepackage{bm}
+\usetikzlibrary{arrows,positioning,calc,shadows,shapes.geometric, patterns, decorations.markings,backgrounds}
+\usepackage{comment}
+\usepackage{etoolbox}
+\usepackage{afterpage}
+%\usepackage{microtype}
+%\usepackage{subfigure}
+\usetikzlibrary{patterns}
+
+\newcommand{\inputtikz}[1]{\input{#1}} % comment this to remove figures
+%\input{tikzmacros.tikz}
+\newcommand{\bool}{\{0,1\}}
+\let\xor\oplus
+\let\eps\varepsilon
+\newcommand{\dist}{\mathtt{dist}}
+\newcommand{\wt}{\mathtt{weight}}
+\newcommand{\negl}{\mathtt{negl}}
+\newcommand{\appref}[1]{Appendix \ref{#1}}
+%\newenvironment{keywords}{
+       %\list{}{\advance\topsep by0.35cm\relax\small
+       %\leftmargin=1cm
+       %\labelwidth=0.35cm
+       %\listparindent=0.35cm
+       %\itemindent\listparindent
+       %\rightmargin\leftmargin}\item[\hskip\labelsep
+                                     %\bfseries Keywords:]}
+     %{\endlist}
+
+\ifodd\fullversionflag	
+  %\newtheorem{theorem}{Theorem}%[section]
+  %\newtheorem{definition}[theorem]{Definition}
+  %\newtheorem{claim}[theorem]{Claim}
+  %\newtheorem{lemma}[theorem]{Lemma}
+  %\newtheorem{assumption}{Assumption}
+\else
+\fi
+  \declaretheorem[name=Assumption]{assumption}
+  \declaretheorem[name=Conjecture]{conj}
+  \newtheorem{innercustomthm}{Assumption}
+  \newenvironment{customassumption}[1]
+    {\renewcommand\theinnercustomthm{#1}\innercustomthm}
+    {\endinnercustomthm}
+
+\newcommand{\bff}[1]{\mbox{\bf #1}}
+\newcommand{\iseq}{\ensuremath{\stackrel{?}{=}}}
+\newcommand{\prob}{\mbox{\rm Pr}}
+\newcommand{\Exp}{\mbox{\rm Exp}}
+\newcommand{\Var}{\mbox{\rm Var}}
+%\newcommand{\ir}[0]{\xleftarrow{\$}}%{\stackrel{\mbox{\tiny R}}{\leftarrow}}
+\newcommand{\ir}{\gets}
+\newcommand{\eqdef}{\stackrel{\rm def}{=}}
+
+\newcommand{\algo}[1]{{\mbox{\sc #1}}}
+
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\JJ}{\mathbb{J}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ZZ}{\mathbb{Z}}
+
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\zqs}{\ZZ_q^*}
+
+\newcommand{\dlp}{{\sffamily{DLP}}}
+\newcommand{\ddh}{{\sffamily{DDH}}}
+\newcommand{\sxdh}{{\sffamily{SXDH}}}
+
