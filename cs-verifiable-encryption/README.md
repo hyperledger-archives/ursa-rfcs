@@ -48,29 +48,29 @@ This protocol has been implemented in this [PR](https://github.com/hyperledger/u
     let pri_key: &CSEncPrikey = &keypair.pri_key;
     ```
 
-1. Say the prover now wants to encrypt 3 attributes. He creates a sequence of his 2 attributes uses the above keypair's public key to call `CSKeypair::encrypt`. The `CSKeypair::encrypt` in addition to the public key takes a `label` which is a public value and indicates the condition underwhich the ciphertext should be decrypted. The same `label` should be used while decrypting this ciphertext. The `CSKeypair::encrypt` function returns a `CSCiphertext` if there is no error. 
+1. Say the prover now wants to encrypt 3 attributes. He creates a sequence of his 2 attributes uses the above keypair's public key to call `encrypt`. The `encrypt` in addition to the public key takes a `label` which is a public value and indicates the condition underwhich the ciphertext should be decrypted. The same `label` should be used while decrypting this ciphertext. The `encrypt` function returns a `CSCiphertext` if there is no error. 
     
     ```rust
     // `serz_pub_key` is the serialized public key
     let pub_key: CSEncPubkey = serde_json::from_str(&serz_pub_key.unwrap()).unwrap();
     let attributes = vec!["Attribute1", "Attribute2", "Attribute3"];
-    let ciphertext: CSCiphertext = CSKeypair::encrypt(&attributes, "only_decrypt_when_*".as_bytes(), &pub_key)?;
+    let ciphertext: CSCiphertext = encrypt(&attributes, "only_decrypt_when_*".as_bytes(), &pub_key)?;
     ```
 
-1. To decrypt the ciphertext from above, the auditor will use the label, ciphertext and his keys in `CSKeypair::decrypt`. If successful, it returns the decrypted attributes
+1. To decrypt the ciphertext from above, the auditor will use the label, ciphertext and his keys in `decrypt`. If successful, it returns the decrypted attributes
 
     ```rust
     // `serz_pri_key` is the serialized private key
     let pri_key: CSEncPrikey = serde_json::from_str(&serz_pri_key.unwrap()).unwrap();
-    let decrypted_messages: Vec<BigNumber> = CSKeypair::decrypt(label, &ciphertext, &keypair.pub_key, &pri_key)?;
+    let decrypted_messages: Vec<BigNumber> = decrypt(label, &ciphertext, &keypair.pub_key, &pri_key)?;
     ```
 
-1. To execute the verifiable encryption protocol, prover will first either create or retrieve `blindings` for the attributes he wants to encrypt and then create the ciphertext over the attributes, over the `blindings` using `CSKeypair::encrypt_and_prove_phase_1`.
+1. To execute the verifiable encryption protocol, prover will first either create or retrieve `blindings` for the attributes he wants to encrypt and then create the ciphertext over the attributes, over the `blindings` using `encrypt_and_prove_phase_1`.
 
     ```rust
     // `serz_pub_key` is the serialized public key
     let pub_key: CSEncPubkey = serde_json::from_str(&serz_pub_key.unwrap()).unwrap();
-    let (ciphertext, blindings_ciphertext, r, r_tilde) = CSKeypair::encrypt_and_prove_phase_1(
+    let (ciphertext, blindings_ciphertext, r, r_tilde) = encrypt_and_prove_phase_1(
             &attributes,
             &blindings,
             label,
@@ -81,12 +81,12 @@ This protocol has been implemented in this [PR](https://github.com/hyperledger/u
     The `r` and `r_tilde` are persisted which he will use while creating the response to the challenge.
     The prover sends both `ciphertext` and `blindings_ciphertext` to the verifier. Incase of a non-interactive ZKP, both `ciphertext` and `blindings_ciphertext` should be hashed in the challenge. In the interactive case, the challenge will be sent by the verifier anyway.
 
-1. When the prover receives/computes the challenge, it creates the response to it using `CSKeypair::encrypt_and_prove_phase_2`. The challenge could have come from a verifier in case of an interactive ZKP or it could be the result of hashing all the commitments of the main proving protocol (including this one).
+1. When the prover receives/computes the challenge, it creates the response to it using `encrypt_and_prove_phase_2`. The challenge could have come from a verifier in case of an interactive ZKP or it could be the result of hashing all the commitments of the main proving protocol (including this one).
 
     ```rust
     // `serz_pub_key` is the serialized public key
     let pub_key: CSEncPubkey = serde_json::from_str(&serz_pub_key.unwrap()).unwrap();
-    let r_hat: BigNumber = CSKeypair::encrypt_and_prove_phase_2(
+    let r_hat: BigNumber = encrypt_and_prove_phase_2(
             &r,
             &r_tilde,
             &challenge,
@@ -95,11 +95,11 @@ This protocol has been implemented in this [PR](https://github.com/hyperledger/u
         )?;
     ```    
 
-1. The verifier reconstructs the ciphertext over blindings and matches the received ciphertext over blindings using `CSKeypair::reconstruct_blindings_ciphertext`. The `attribute_responses` in the example below is sent by the prover as part of the main protocol for all attributes. The verifier picks those that were encrypted.
+1. The verifier reconstructs the ciphertext over blindings and matches the received ciphertext over blindings using `reconstruct_blindings_ciphertext`. The `attribute_responses` in the example below is sent by the prover as part of the main protocol for all attributes. The verifier picks those that were encrypted.
 
     ```rust
     let pub_key: CSEncPubkey = serde_json::from_str(&serz_pub_key.unwrap()).unwrap();
-    let blindings_ciphertext: CSCiphertext = CSKeypair::reconstruct_blindings_ciphertext(
+    let blindings_ciphertext: CSCiphertext = reconstruct_blindings_ciphertext(
             &ciphertext,
             &attribute_responses,
             &r_hat,
