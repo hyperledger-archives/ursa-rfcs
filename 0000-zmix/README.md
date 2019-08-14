@@ -7,56 +7,58 @@
 # Summary
 [summary]: #summary
 
-ZMix is a library for parsing ZKLang statments into zero-knowledge proofs.
-ZMix can generate and verify. ZKLang is a collaboration with Jan Camenisch et al. and Sovrin.
-This RFC will describe the major components involved.
+Zmix is a library for expressing, constructing, and verifying non-interactive zero-knowledge proofs (ZKPs). 
+A broad class of zero-knowledge proofs is supported.
+Schnorr-type proofs are used for many parts and to glue pieces together,
+while individual parts of a proof may use other zero-knoweldge techniques. 
 
 # Motivation
 [motivation]: #motivation
 
-Hyperledger Indy is built with the intent to provide anonymous credentials
-and zero knowledge proofs. There aren't many zero knowledge proof systems
-that have the flexibility and motivation to handle various ZKPs or describe them
-in a generic way. This RFC discusses the data and APIs that are required.
+Zero-knowledge proofs form a cryptographic building block with many applications.
+Within hyperledger, Indy relies heavily on ZKPs to construct anonymous credentials. 
+Fabric uses ZKPs to authenticate transactions when using the identity mixer membership service provider.
+Implementing ZKPs correctly however is challenging. 
+Zmix aims to offer a secure implementation of ZKPs which can be consumed through a simple API,
+making it easier for other projects to use ZKPs.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-ZMix will handle three pieces of data for generating and verifying proofs.
+## Introduction to ZKP
 
-## Proof Spec
+A zero-knowledge proof lets a prover to convince a verifier about the truth of some statement about certain values,
+without revealing these values.
+For example, a prover may know that values `A` and `B` have an equal discrete logarithm.
+That is, for some `x`, `A = g^x` and `B = h^x`.
+It could convince a verifier that this is true by revealing `x`. 
+If the prover would rather not disclose $x$, it could instead construct a zero-knowledge proof of this statement,
+and send the resulting proof to the verifier.
+The verifier can now be sure that `log_g(A) = log_h(B)`, without knowing the discrete log `x`.
 
-A document containing the public cryptographic material and descriptive metadata.
-It describes the subproofs that will be used in the overall proof.
-Subproofs are the type of proof(s) to generate and any public data necessary during proof generation.
-For example, anonymous credentials uses the following public data: the schema that describes the credential attributes and an issuers related information like public cryptographic keys.
-Proof specs should be capable of being generated deterministically by any party.
-Used in combination with either a **witness** to generate a proof, or a **proof** to be validated.
+## Introduction to Zmix
 
-## Witness
+In the example above, we have three pieces of data: 
 
-A document containing the Prover's private data. This includes: private keys, secrets, attribute values, hash pre-images.
+- What do we prove? We prove that there exists an `x` such that `A = g^x` and `B = h^x`.
 
-## Proof
+- How do we know this is actually true? We know this because we know `x` for which this is true. 
 
-Cryptographic token(s) that is the proof to be verified.
+- The actual zero-knowledge proof that the prover produces and the verifier verifies.
 
-## Out of scope
+In zmix, we have data types exactly corresponding to these three points:
 
-Initially, ZMix will not handle creating **proof specs**.
-In a ZKP protocol, a relying party will make a **proof request** for Provers to fulfill.
-A **proof request** contains non-cryptographic information like which credential issuers it will accept,
-how votes will be submitted, and subscriptions are checked. A Prover may not accept the **proof request** as is and could make
-a counter proposal in the form of a **proof offer**. Once a **proof request** is agreed upon, the Prover will have to choose
-how to fulfill the proof. Prover will have to acquire any missing information not already on hand. Prover may also choose between
-multiple credentials that can fulfill the proof. The choices were made will need to be communicated to the verifier as a **proof resolution**–the non-cryptographic
-description about the proof. The **proof resolution** and **proof request** can be combined with the public data to form the **proof spec**.
-Exactly where the public cryptographic material is stored and how it is retrieved is up to end consumers.
-This could be handled later.
+- `ProofSpec`: specify what we want to prove
 
-## Example diagram
+- `Witness`: contains the secrets that satisfies the statement of a `ProofSpec`.
 
-![flow](zmix_flow.png)
+- `Proof`: the zero-knowledge proof. 
+
+The library privides two features: constructing and verifying zero-knowledge proofs.
+To construct a proof, zmix requires a `ProofSpec s` and a `Witness w` (which is a valid witness for `p`),
+and will output a `Proof p`.
+To verify a proof, zmix requires input a `ProofSpec s` and a `Proof p`, 
+and outputs a boolean indicating whether proof was valid or invalid.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
