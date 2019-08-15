@@ -1,0 +1,26 @@
+@startuml
+participant "zmix Proof Orchestrator" as po
+participant "Proof Module 1" as pm1
+participant "..." as pm2
+participant "Proof Module N" as pmn
+
+-> po: generate_proof(ProofSpec, Witness)
+
+po -> pm1: get_hash_contribution(...)
+po <- pm1: hc1
+po <-> pm2: ...
+po -> pmn: get_hash_contribution(...)
+po <- pmn: hcN
+
+po -> po: Compute common challenge as\nhash of individual contributions.\nExample: c = hash(hc1 ||  ... || hcN)
+
+po -> pm1: get_proof_contribution(c, ...)
+po <- pm1: pc1
+po <-> pm2: ...
+po -> pmn: get_proof_contribution(c, ...)
+po <- pmn: pcN
+
+po -> po: Compose proof contributions into a singe proof
+
+<- po: Proof
+@enduml
