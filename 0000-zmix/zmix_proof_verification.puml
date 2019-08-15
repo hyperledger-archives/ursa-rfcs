@@ -1,0 +1,26 @@
+@startuml
+participant "zmix Proof Orchestrator" as po
+participant "Proof Module 1" as pm1
+participant "..." as pm2
+participant "Proof Module N" as pmn
+
+-> po: verify_proof(Proof, ProofSpec)
+
+note over po
+Proof contains a challenge hash c
+end note
+
+po -> pm1: recompute_hash_contribution(c, ...)
+po <- pm1: rhc1
+po <-> pm2: ...
+po -> pmn: recompute_hash_contribution(...)
+po <- pmn: rhcN
+
+po -> po: Recompute common challenge as\nhash of individual contributions.\nExample: c' = hash(rhc1 || ... || rhcN)
+
+note over po
+Proof is valid w.r.t. ProofSpec if c == c'
+end note
+
+<- po: true/false
+@enduml
