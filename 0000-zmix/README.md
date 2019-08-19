@@ -39,32 +39,33 @@ of this statement, and send the resulting proof to the verifier. The
 verifier can now be sure that `log_g(A) = log_h(B)`, without knowing the
 discrete log `x`.
 
-In the example above, we have three pieces of data: 
+In the example above, there are three components: 
 
-- What do we prove? We prove that there exists an `x` such that `A = g^x`
+- What do we want to prove? That there exists an `x` such that `A = g^x`
 and `B = h^x`.
 
-- How do we know this is actually true? We know this because we know `x`
-for which this is true. 
+- How do we know this is true? Because we know `x`.
 
-- The actual zero-knowledge proof that the prover produces and the verifier
-verifies.
+- How can we prove it? With a zero-knowledge proof that the prover produces
+and the verifier verifies.
 
-In zmix, we have data types exactly corresponding to these three points:
+In zmix, we have data types corresponding to these three components:
 
-- `ProofSpec`: specify what we want to prove
+- `ProofSpec`: specifies what we want to prove
 
-- `Witness`: contains the secrets that satisfies the statement of a
-`ProofSpec`.
+- `Witness`: contains the secrets that satisfy the `ProofSpec`.
 
 - `Proof`: the zero-knowledge proof. 
 
-The library provides two features: constructing and verifying
-zero-knowledge proofs. To construct a proof, zmix requires a `ProofSpec s`
-and a `Witness w` (which is a valid witness for `p`), and will output a
-`Proof p`. To verify a proof, zmix requires input a `ProofSpec s` and a
-`Proof p`, and outputs a boolean indicating whether proof was valid or
-invalid.
+The library provides two features: construction and verification of
+zero-knowledge proofs. 
+
+To construct a proof, zmix requires a `ProofSpec s` and a `Witness w`
+(which is a valid witness for `p`), and will output a `Proof p`. 
+
+To verify a proof, zmix requires a `ProofSpec s` and a `Proof p`, and will
+output a boolean indicating whether the proof was valid (true) or invalid
+(false).
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
