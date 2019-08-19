@@ -151,9 +151,9 @@ in the signatures are *equal*.
 ## Proof Modules
 
 As mentioned previously, zmix will offer various kinds of statement types.
-For each such type, the library will provide a respective *proof module*
-that handles all aspects of this statement type. We envision proof modules
-to be implemented according to the following interface:
+For each statement type, the library will provide a respective 
+*proof module* that handles all aspects of this statement type. Proof
+modules must be implemented according to the following interface:
 ```
 pub trait ProofModule {
     fn get_hash_contribution(
@@ -178,7 +178,7 @@ pub struct ProofModuleState {
 ```
 
 Given this proof module interface, a central *proof orchestrator* within
-zmix shall coordinate the generation and the verification of zero-knowledge
+zmix will coordinate the generation and the verification of zero-knowledge
 proofs as follows:
 
 ![Generation flow](zmix_proof_generation.png)
