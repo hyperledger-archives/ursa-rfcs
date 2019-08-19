@@ -171,6 +171,7 @@ pub trait ProofModule {
     ) -> Result<HashContribution, ZkLangError>;
 }
 
+#[transparent]
 pub struct HashContribution(pub Vec<u8>);
 pub struct ProofModuleState {
     state: Vec<u8>,
@@ -186,6 +187,8 @@ proofs as follows:
 ![Verification flow](zmix_proof_verification.png)
 
 ### Module types
+
+Zmix plans to offer the following proof modules
 
 - Signatures
     - Boneh Boyen Shacham
