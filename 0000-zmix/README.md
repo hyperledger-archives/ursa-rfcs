@@ -187,14 +187,16 @@ proofs as follows:
 
 ![Verification flow](zmix_proof_verification.png)
 
-## Serialization
+### Module types
 
-TODO: Depending on how the zmix library will be shipped and deployed, we
-may require a way to serialize and deserialize the `ProofSpec`, the
-`Witness`, and the `Proof` structures. This, for example, could be done by
-means of a JSON schema. An alternative approach would be to offer zmix only
-for Rust as a Rust crate: then serialization and deserialization seems to
-become irrelevant.
+- Signatures
+    - Boneh Boyen Shacham
+    - Pointcheval Saunders
+- Pedersen commitments
+- Bulletproof intervals
+- Bulletproof set membership inclusive and exclusive
+- SNARKs set memberships
+- Verifiable encryption 
 
 # Changelog
 [changelog]: #changelog
