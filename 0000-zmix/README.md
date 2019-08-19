@@ -27,19 +27,17 @@ it easier for other projects to use ZKPs.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-## Introduction to ZKP
+## Introduction
 
-A zero-knowledge proof lets a prover convince a verifier about the truth of
-some statement about certain values, without revealing these values. For
+A zero-knowledge proof enables a prover to convince a verifier of the truth
+of some statement about certain values, without revealing those values. For
 example, a prover may know that values `A` and `B` have an equal discrete
 logarithm. That is, for some `x`, `A = g^x` and `B = h^x`. It could
 convince a verifier that this is true by revealing `x`. If the prover would
 rather not disclose `x`, it could instead construct a zero-knowledge proof
 of this statement, and send the resulting proof to the verifier. The 
-erifier can now be sure that `log_g(A) = log_h(B)`, without knowing the
+verifier can now be sure that `log_g(A) = log_h(B)`, without knowing the
 discrete log `x`.
-
-## Introduction to Zmix
 
 In the example above, we have three pieces of data: 
 
