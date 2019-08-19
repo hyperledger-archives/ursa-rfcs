@@ -197,11 +197,131 @@ Zmix plans to offer the following proof modules
 - Pedersen commitments
 - Bulletproof intervals
 - Bulletproof set membership inclusive and exclusive
-- SNARKs set memberships
-- Verifiable encryption 
+- zk-SNARK set memberships
+- Verifiable encryption
+
+## Structures
+
+### Proof spec
+
+The proof spec follows this data model
+```rust
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ProofSpec {
+    #[serde(rename = "messageCount")]
+    pub message_count: usize,
+    pub statements: Vec<Statement>,
+    pub params: ProofSpecParams,
+}
+
+```
+
+For example, a proof spec could be represented in JSON as
+```json
+{
+  "messageCount": 2,
+  "statements": [
+    {
+      "type": "SignatureBBS",
+      "data": {
+        "pk": [
+          112,
+          117,
+          98,
+          108,
+          105,
+          99,
+          107,
+          101,
+          121
+        ],
+        "messages": [
+          {
+            "hiddenValueIndex": 0
+          },
+          {
+            "revealedValue": [
+              118,
+              97,
+              108,
+              117,
+              101
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "params": "BLS12_381"
+}
+
+```
+
+### Witness
+The witness follows this data model
+
+```rust
+pub struct Witness {
+    messages: Vec<Vec<u8>>,
+    statement_witnesses: Vec<StatementWitness>,
+}
+
+pub enum StatementWitness {
+    SignatureBBS(SignatureBBSWitness),
+    SignaturePS(SignaturePSWitness),
+    EncryptionCS(EncryptionCSWitness),
+    PedersenCommitment(PedersenCommitmentWitness),
+    IntervalBulletproof, // no witness data needed
+    SetMembershipBulletProofMerkle(MerklePathWitness), 
+    SetMembershipEccAccumulator(AccumulatorWitness),
+}
+
+pub struct SignatureBBSWitness {
+    a: PointG1,
+    e: FieldOrderElement,
+    s: FieldOrderElement,
+}
+
+```
+
+### Proof
+The proof follows this data model
+```rust
+/// A proof p is valid w.r.t. a proof specification s if
+/// * p contains one message s-value for each of the (hidden) messages in s, so p.message_s_values.len() == s.message_count
+/// * p contains one statement proof for each statement in s, so p.statement_proofs.len() == s.statements.len()
+/// * the type of p.statement_proofs[i] corresponds to the type of s.statements[i]
+/// * TODO: add further requirements
+pub struct Proof {
+    // proof contains a single “challenge” value
+    challenge_hash: Vec<u8>,
+    message_s_values: Vec<Vec<u8>>,
+    statement_proofs: Vec<StatementProof>,
+}
+
+pub enum StatementProof {
+    SignatureBBS(SignatureBBSProof),
+    SignaturePS(SignaturePSProof),
+    EncryptionCS(EncryptionCSProof),
+    PedersenCommitment(PedersenCommitmentProof),
+    IntervalBulletproof(IntervalBulletproofProof),
+}
+
+pub struct SignatureBBSProof {
+    a_prime: Vec<u8>,
+    a_bar: Vec<u8>,
+    b_prime: Vec<u8>,
+    s_r2: Vec<u8>,
+    s_r3: Vec<u8>,
+    s_s_prime: Vec<u8>,
+    s_e: Vec<u8>,
+}
+```
 
 # Changelog
 [changelog]: #changelog
+
+- [19 Aug 2019] - v1.2 - Update with example data models
 
 - [15 Aug 2019] - v1.1 - Update following recent discussions.
 
