@@ -90,6 +90,10 @@ pub struct ProofSpec {
 }
 ```
 
+***
+TODO: rewrite the text from here to focus more on *how* all the parts fit together based on the *proof modules* (including the two sequence diagrams) and the generic concept of *statements*, without talking about concrete statement types (such as signatures and commitments) yet. Only afterwards, we should introduce the various statement types and have separate sections for each of them to explain what they are about (SignatureBBS, SignaturePS, PedersenCommitment, IntervalBulletproof, EncryptionCS, LinkableIndistinguishableTagBLS).
+***
+
 While the library will offer various kinds of statements, the most
 important ones are for signatures. In general, signatures contain at least
 
@@ -187,9 +191,9 @@ proofs as follows:
 
 ![Verification flow](zmix_proof_verification.png)
 
-### Module types
+### Supported statement types
 
-Zmix plans to offer the following proof modules
+Zmix plans to offer the following proof modules for the following statement types:
 
 - Signatures
     - Boneh Boyen Shacham
@@ -202,7 +206,54 @@ Zmix plans to offer the following proof modules
 
 ## Structures
 
-### Proof spec
+### Statements
+
+```rust
+pub enum Statement {
+    /// Boneh Boyen Shacham Signature
+    SignatureBBS {
+        pk: Vec<u8>,
+        messages: Vec<HiddenOrRevealedValue>,
+    },
+    /// Pointcheval Sanders Signature
+    SignaturePS {
+        pk: Vec<u8>,
+        messages: Vec<HiddenOrRevealedValue>,
+    },
+    PedersenCommitment {
+        message_index: usize,
+        commitment: Vec<u8>,
+        params: PedersenCommitmentParams,
+    },
+    IntervalBulletproof {
+        message_index: usize,
+        min: Vec<u8>,
+        max: Vec<u8>,
+        params: Vec<u8>,
+    },
+    /// Camenisch Shoup Encryption
+    EncryptionCS {
+        message_index: usize,
+        pk: Vec<u8>,
+        ciphertext: Vec<u8>,
+    },
+    /// As defined by Bernhard et al., Anonymous attestation with user-controlled linkability (ia.cr/2011/658)
+    LinkableIndistinguishableTagBLS {
+        message_index: usize,
+        tag: Vec<u8>,
+        params: Vec<u8>,
+    },
+}
+
+pub enum HiddenOrRevealedValue {
+    HiddenValueIndex(usize),
+    RevealedValue(Vec<u8>),
+}
+
+pub struct PedersenCommitmentParams(pub Vec<u8>);
+```
+
+### Proof Specification
 
 The proof spec follows this data model
 ```rust
@@ -214,6 +265,11 @@ pub struct ProofSpec {
     pub params: ProofSpecParams,
 }
 
+pub enum ProofSpecParams {
+    BN254,
+    BLS12_381,
+    Ed25519,
+}
 ```
 
 For example, a proof spec could be represented in JSON as
@@ -261,6 +317,10 @@ For example, a proof spec could be represented in JSON as
 The witness follows this data model
 
 ```rust
+/// A witness w is valid w.r.t. a proof specification s if
+/// * w contains one value for each of the (hidden) messages in s, so w.messages.len() == s.message_count
+/// * w contains one statement witness for each statement in s, so w.statement_witnesses.len() == s.statements.len()
+/// * TODO: add further requirements
 pub struct Witness {
     messages: Vec<Vec<u8>>,
     statement_witnesses: Vec<StatementWitness>,
@@ -281,7 +341,6 @@ pub struct SignatureBBSWitness {
     e: FieldOrderElement,
     s: FieldOrderElement,
 }
-
 ```
 
 ### Proof
@@ -315,6 +374,10 @@ pub struct SignatureBBSProof {
     s_r3: Vec<u8>,
     s_s_prime: Vec<u8>,
     s_e: Vec<u8>,
+}
+
+pub struct PedersenCommitmentProof {
+    opening_s_val: Vec<u8>,
 }
 ```
 
