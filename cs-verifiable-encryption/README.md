@@ -115,7 +115,8 @@ This protocol has been implemented in this [PR](https://github.com/hyperledger/u
 [drawbacks]: #drawbacks
 
 The prover should ensure that the auditor will not decrypt his attributes unless the pre-agreed terms are satisfied. If the verifier tricks the prover to encrypt his attributes for a colluding auditor then the prover's privacy is broken. Also the prover should be careful about what attributes he is encrypting and not encrypt sensitive attributes like link secret. The sensitivity of same attributes maybe different depending on the auditor. Though Ursa APIs should not (and cannot) dictate which attributes cannot be encrypted, the consumer of Ursa should take measures to prevent accidental encryption of 
-such attributes. Eg, Hyperledger Aries can expose 2 methods for verifiably encrypting, like `ver_enc` and `ver_enc_unsafe`, `ver_enc` will not allow encrypting link secret.
+such attributes. Eg, Hyperledger Aries can expose 2 methods for verifiably encrypting, like `ver_enc` and `ver_enc_unsafe`, `ver_enc` will not allow encrypting link secret.  
+Another aspect for CS encryption is that it is expensive. The computations are done modulo a 4096 bit number. Also the verification and the signing key each grow by 512 bytes for each attribute that can be encrypted. Having large signing keys is undesirable when signing keys are to be kept in hardware. Having large verification keys is undesirable when they are to be stored on a storage constraint system like Bitcoin blockchain or Ethereum smart contract and force the signer to introduce a level of indirection in storage where hash of the verification key lives on the blockchain but the verification key lives on an external storage. 
 
 # Rationale and alternatives
 [alternatives]: #alternatives
