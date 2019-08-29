@@ -79,8 +79,7 @@ where the proof specification contains
 
 1. the number of secrets involved in the zero-knowlege proof (we call these
 _messages_), and
-1. a list of _statements_, which represent sub-parts of the overall
-zero-knowlege proof:
+1. a list of _statements_, where each statement represents a _part_ of the overall zero-knowlege proof:
 
 ```
 pub struct ProofSpec {
@@ -89,13 +88,55 @@ pub struct ProofSpec {
     ...
 }
 ```
+The library will offer and support various types of statements, such as signatures and commitments.
+To combine and connect all the statements (i.e., the proof's parts) contained in the proof specification, that is, glue all parts together into a single zero-knowledge proof, the library will use _Schnorr proofs_.
 
-***
-TODO: rewrite the text from here to focus more on *how* all the parts fit together based on the *proof modules* (including the two sequence diagrams) and the generic concept of *statements*, without talking about concrete statement types (such as signatures and commitments) yet. Only afterwards, we should introduce the various statement types and have separate sections for each of them to explain what they are about (SignatureBBS, SignaturePS, PedersenCommitment, IntervalBulletproof, EncryptionCS, LinkableIndistinguishableTagBLS).
-***
+For generating a Schnorr proof that encompasses multiple statements, for each statement one requires a _hash contribution_ on the one hand, and a _proof contribution_ based on an aggregation of the hash contributions on the other hand.
+In particular, the library will implement a proof orchestrator that conceptually generates Schnorr proofs as follows:
 
-While the library will offer various kinds of statements, the most
-important ones are for signatures. In general, signatures contain at least
+![Generation flow](zmix_proof_generation.png)
+
+For verifying such a Schnorr proof, one again requires (re-computed) hash contributions for each statement.
+In particular, the library's proof orchestrator will conceptually verify a Schnorr proof as follows:
+
+![Verification flow](zmix_proof_verification.png)
+
+## Proof Modules
+
+In accordance with the sequence diagrams shown previously, to (re-)generate the hash contributions and the proof contributions, the library will implement the following _proof module_ interface for each supported statement type:
+
+```
+pub trait ProofModule {
+    fn get_hash_contribution(
+        statement: Statement,
+        witness: StatementWitness,
+        message_r_values: Vec<Vec<u8>>,
+    ) -> Result<(HashContribution, ProofModuleState), ZkLangError>;
+    fn get_proof_contribution(
+        state: ProofModuleState,
+        challenge_hash: Vec<u8>,
+    ) -> Result<StatementProof, ZkLangError>;
+    fn recompute_hash_contribution(
+        challenge_hash: Vec<u8>,
+        proof: StatementProof,
+    ) -> Result<HashContribution, ZkLangError>;
+}
+
+pub struct HashContribution(pub Vec<u8>);
+pub struct ProofModuleState {
+    state: Vec<u8>,
+}
+```
+
+## Referencing secrets by index
+
+We previously described that the proof specification contains the number of secrets (called messages) involved in the proof as `message_count`, and a list of statements.
+When generating and verifying a proof according to a proof spec, the number of secrets and the various statements are related in the following way:
+assuming an ordered list of size `message_count` where each element represents some particular (unknown) secret involved in the proof, the statements can reference elements (that is, secrets) of that list by index.
+If different statements reference the same index, they effectively reference the same secret.
+
+To illustrate this, consider a statement type for signatures.
+In general, signatures contain at least
 
 1. a public key under which the signature can be verified, and
 1. an *ordered* list of values that are either hidden (that is, secret) or
@@ -119,13 +160,13 @@ pub enum HiddenOrRevealedValue {
 }
 ```
 
-While for each revealed value in the signature statement simply contains
+While each revealed value in the signature statement simply contains
 the actual value, hidden values are qualified with an _index_.
-This index must be smaller or equal to the overall number of secrets
-involved in the zero-knowledge proof as specified in the field
-`message_count` in the proof specification.
+In accordance with the list metaphor described above, this index must be smaller or equal to the overall number of secrets as specified in the field `message_count` in the proof specification.
 
-This index-based approach allows for referring to the *same* secret in the
+### Referencing the same secret from different statements
+
+The index-based approach allows for referring to the *same* secret in the
 overall zero-knowledge proof from *different* statements. For example,
 another important statement type are commitments, such as the following
 Pederson commitment:
@@ -149,49 +190,11 @@ The fact that both the signature and the commitment refer to index 0 means
 that they both refer to the same secret in the overall list of secrets (of
 size `message_count`) involved in the zero-knowledge proof.
 
-In this respect, the case when *different signature statements* refer to
-the *same* index is special: this means that the underlying secret values
-in the signatures are *equal*.
+### Expressing equality of secrets
 
-## Proof Modules
+The case when *different signature statements* reference the *same* index is special: this means that the underlying secret values in the signatures are *equal*.
 
-As mentioned previously, zmix will offer various kinds of statement types.
-For each statement type, the library will provide a respective 
-*proof module* that handles all aspects of this statement type. Proof
-modules must be implemented according to the following interface:
-```
-pub trait ProofModule {
-    fn get_hash_contribution(
-        statement: Statement,
-        witness: StatementWitness,
-        message_r_values: Vec<Vec<u8>>,
-    ) -> Result<(HashContribution, ProofModuleState), ZkLangError>;
-    fn get_proof_contribution(
-        state: ProofModuleState,
-        challenge_hash: Vec<u8>,
-    ) -> Result<StatementProof, ZkLangError>;
-    fn recompute_hash_contribution(
-        challenge_hash: Vec<u8>,
-        proof: StatementProof,
-    ) -> Result<HashContribution, ZkLangError>;
-}
-
-#[transparent]
-pub struct HashContribution(pub Vec<u8>);
-pub struct ProofModuleState {
-    state: Vec<u8>,
-}
-```
-
-Given this proof module interface, a central *proof orchestrator* within
-zmix will coordinate the generation and the verification of zero-knowledge
-proofs as follows:
-
-![Generation flow](zmix_proof_generation.png)
-
-![Verification flow](zmix_proof_verification.png)
-
-### Supported statement types
+## Supported statement types
 
 Zmix plans to offer the following proof modules for the following statement types:
 
@@ -203,6 +206,7 @@ Zmix plans to offer the following proof modules for the following statement type
 - Bulletproof set membership inclusive and exclusive
 - zk-SNARK set memberships
 - Verifiable encryption
+- Linkable indistinguisable tags (see ia.cr/2011/658) to realize scope pseudonyms
 
 ## Structures
 
