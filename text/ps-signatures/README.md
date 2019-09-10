@@ -23,7 +23,7 @@ There are 3 mainly entities in anonymous credentials, the *issuer* which signs a
     ```rust
     pub fn keygen(count_messages: usize, label: &[u8]) -> (Sigkey, Verkey)
     ```
-- The signer can create a new signature on a collection of known messages using `Signature::new`. The number of messages should be compatible with the provided `Verkey`.
+- The signer can create a new signature on a collection of known messages using `Signature::new`. The number of messages should be compatible with the provided `Verkey`. Regardless of the number of messages being signed, the signature always consists of 2 group elements.
     ```rust
     impl Signature {
         pub fn new(
@@ -107,7 +107,7 @@ The `PoKOfSignature` is based on section 6.2 of the paper and the implementation
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Since this paper is more than a decade old, we might find some more efficient schemes.
+Not aware of any.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
