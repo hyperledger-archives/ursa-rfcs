@@ -7,7 +7,7 @@
 # Summary
 [summary]: #summary
 
-This RFC describes constructing proofs of knowledge of committed values in a vector Pedersen commitment using Sigma protocol. The prover is able to construct both interactive and non-interactive proofs of knowledge. The code is [here](https://github.com/hyperledger/ursa/blob/2067d0543c80eb883721863d7886d4e66f1d655d/libzmix/ps/src/pok_vc.rs).
+This RFC describes constructing proofs of knowledge of committed values in a vector Pedersen commitment using [Schnorr protocol](https://en.wikipedia.org/wiki/Proof_of_knowledge#Schnorr_protocol). The prover is able to construct both interactive and non-interactive proofs of knowledge. The code is [here](https://github.com/hyperledger/ursa/blob/2067d0543c80eb883721863d7886d4e66f1d655d/libzmix/ps/src/pok_vc.rs).
 
 # Motivation
 [motivation]: #motivation
@@ -17,18 +17,18 @@ Several protocols require proving knowledge of committed values in commitments. 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Sigma protocol is used to prove knowledge of discrete logarithms and relations among them. So it can be used to prove knowledge of `x` in g<sup>`x`</sup> without revealing `x`. Or it can be used to prove knowledge of `x`, `y` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup> without revealing `x`, `y` or `z`. A slight variation of the statement is to reveal that g<sub>2</sub>'s exponent is `y` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>. This is accomplished by proving knowledge of `x` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>3</sub><sup>`z`</sup> and the verifier can check that product of g<sub>2</sub><sup>`y`</sup> and g<sub>1</sub><sup>`x`</sup>g<sub>3</sub><sup>`z`</sup> is indeed g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>.   
+[Schnorr protocol](https://en.wikipedia.org/wiki/Proof_of_knowledge#Schnorr_protocol) is used to prove knowledge of discrete logarithms and relations among them. So it can be used to prove knowledge of `x` in g<sup>`x`</sup> without revealing `x`. Or it can be used to prove knowledge of `x`, `y` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup> without revealing `x`, `y` or `z`. A slight variation of the statement is to reveal that g<sub>2</sub>'s exponent is `y` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>. This is accomplished by proving knowledge of `x` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>3</sub><sup>`z`</sup> and the verifier can check that product of g<sub>2</sub><sup>`y`</sup> and g<sub>1</sub><sup>`x`</sup>g<sub>3</sub><sup>`z`</sup> is indeed g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>.   
 Being able to prove such statements is important for anonymous credentials because in those the credential signature is of a form Zg<sub>1</sub><sup>`m1`</sup>g<sub>2</sub><sup>`m2`</sup>g<sub>3</sub><sup>`m3`</sup>...g<sub>n</sub><sup>`n`</sup>h<sup>`r`</sup> where `Z` is derived from signer's secret key and each of m<sub>i</sub> is a credential attribute and `r` is the randomness. There might be more elements in the signature but the aforementioned is of interest here. When using such credentials for zero knowledge proofs, the prover proves knowledge of the signature and the attributes in there. Depending on the signature scheme used, the prover randomizes the signature in a particular way before creating a proof of knowledge of the messages and signature.
 
-Interactive Sigma protocols are 3-step, 
+Interactive Schnorr protocol is 3-step, 
 - in the first step, prover commits to some randomness and sends it to the verifier.
 - in 2nd step, prover gets a challenge from the verifier.
 - in 3rd step, prover creates a response involving the randomness, its secret and the challenge and sends to the verifier.
 
 The verifier will now check correctness of a relation involving the commitment from 1st step, challenge and response.
-Non interactive Sigma protocols modify the 2nd step. Rather than getting the challenge from the verifier, they compute the challenge by hashing the commitments from 1st step.   
+Non interactive Schnorr protocol modifies the 2nd step. Rather than getting the challenge from the verifier, they compute the challenge by hashing the commitments from 1st step.   
 
-Consider an example of prover proving knowledge of `x`, `y` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>. Lets call g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup> as P. Only the prover knows `x`, `y` and `z` but both prover and verifier know P, g<sub>1</sub>, g<sub>2</sub> and g<sub>3</sub>. 
+The protocol used to prove knowledge is a generalization of the one described [here](https://www.cs.jhu.edu/~susan/600.641/scribes/lecture10.pdf), under section 3, page 5. Consider an example of prover proving knowledge of `x`, `y` and `z` in g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup>. Lets call g<sub>1</sub><sup>`x`</sup>g<sub>2</sub><sup>`y`</sup>g<sub>3</sub><sup>`z`</sup> as P. Only the prover knows `x`, `y` and `z` but both prover and verifier know P, g<sub>1</sub>, g<sub>2</sub> and g<sub>3</sub>. 
 - prover picks 3 random numbers r<sub>1</sub>, r<sub>2</sub> and r<sub>3</sub> (corresponding to x, y and z), creates commitment T = g<sub>1</sub><sup>r<sub>1</sub></sup>g<sub>2</sub><sup>r<sub>2</sub></sup>g<sub>3</sub><sup>r<sub>3</sub></sup> and sends T to the verifier.
 - verifier sends challenge c to prover.
 - prover computes responses s<sub>1</sub> = r<sub>1</sub> - c*x, s<sub>2</sub> = r<sub>2</sub> - c*y, s<sub>3</sub> = r<sub>3</sub> - c*z and sends s<sub>1</sub>, s<sub>2</sub> and s<sub>3</sub> to verifier.
@@ -138,5 +138,5 @@ Not aware of any drawback.
 # Unresolved questions
 [unresolved]: #unresolved-questions
 
-- Should similar macros exists with logic for doing different kinds of Sigma protocols and their composition.
+- Should similar macros exists with logic for doing different kinds of Schnorr protocols and their composition.
 
