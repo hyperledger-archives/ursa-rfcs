@@ -12,13 +12,13 @@ This is an implementation of delegatable anonymous credentials as described in t
 # Motivation
 [motivation]: #motivation
 
-Delegatable credentials are useful in saving operational costs of issuance and can also make issuance cheaper. If an organisation that wants to issue credentials has only the head of the organisation (or the relevant individual) issuing the credential, it becomes a bottleneck. But if the head decides to delegate the issuance rights to its subordinates, then the credential receivers can check that credential comes from a delegatee of the head. In addition, delegation provides privacy to issuers who might want to remain anonymous to verifiers. This [Aries RFC](https://github.com/hyperledger/aries-rfcs/pull/218) goes into more details of delegatable credentials.
+Delegatable credentials are useful in saving operational costs of issuance and can also make issuance cheaper. If an organization that wants to issue credentials has only the head of the organization (or the relevant individual) issuing the credential, it becomes a bottleneck. But if the head decides to delegate the issuance rights to its subordinates, then the credential receivers can check that credential comes from a delegatee of the head. In addition, delegation provides privacy to issuers who might want to remain anonymous to verifiers. This [Aries RFC](https://github.com/hyperledger/aries-rfcs/pull/218) goes into more details of delegatable credentials.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
 The entity delegating the credential issuance rights and identified to the verifier is called the *root issuer* or the *root delegator*. All issuers have a signing and verification key but only the root issuer's verification key is known to the verifier. The linear structure starting at the root issuer and consisting of subsequent issuers involved in delegation is called the *issuer chain*. For reasons explained later, an issuer is either an odd level issuer or an even level issuer depending on its position in the issuer chain. The *root issuer* is always an even level issuer. Similarly, the linear structure starting at the root issuer's credential and consisting of subsequent issuers' credentials is called the *credential chain*. A credential is either an odd level credential or even level credential depending on the issuer; an even level issuer always issues an even level credential and vice versa. Each credentials in the credential chain is a also called a *link* and has a level which is a  monotonically increasing number starting from 1 and has no gaps. The credential (or link) issued by root issuer has level 1, the subsequent link will have level 2 and so on. During delegation (credential issuance), the delegator in addition to issuing a credential, sends its credential chain also to the delgatee. A presentation created from the delegated credential is called *attribute token*.  
-Because verification keys of even level issuers is cryptographically different from verification keys of odd level issuers, verification key of even level issuers is called even level verification key and of odd level issuers is called odd level verification key. When an entity wants to be an issuer at both even and odd levels, it will own two keypairs, one for odd level and one for even level.
+Because verification keys of even level issuers is cryptographically different from verification keys of odd level issuers, verification key of even level issuers is called even level verification key and of odd level issuers is called odd level verification key. When an entity wants to be an issuer at both even and odd levels, it will own two keypairs, one for odd level and one for even level. Throughout this document and the code, the terms sigkey and verkey are used to refer to signing key and verification key.
 Lets look at an example. Consider an issuer chain of Alice -> Bob -> Carol -> Dave where Alice is the root issuer. Alice will issue a delegatable credential to Bob, Bob will issue a delegatable credential to Carol, Carol will issue a delegatable credential to Dave and Dave will create a presentation from its credential that will be verified by Eva. Alice is an even level issuer who has an even level verkey, it will issue an odd level credential with level 1 to Bob who has an odd level verkey and who will issue an even level credential with level 2 to Carol who has an even level verkey and who will issue an odd level credential with level 3 to Dave who has an odd level verkey. If Dave also interacted with an odd level issuer, he will need to have an even level verkey (should be with a different secret key).  
 During delegation, the delegator also signs the delegatee's verkey as one of the attributes of the credential. Thus the level 1 credential above (issued to Bob) will have Bob's odd level verkey as one of the attributes, the level 2 credential issued to Carol will have Carol's even level verkey as one of the attributes and so on. When Alice delegates to Bob, she sends one credential to Bob, say C1, when Bob delegates to Carol, he creates a new credential C2 for Carol and sends C1 in addition to C2 to Carol. Similarly when Carol will issue a credential, she will also send C1 and C2 in addition to her issued credential.
 
@@ -49,7 +49,7 @@ The reason for this distinction of odd and even levels is the use of *structure 
     // OR for Groth2
     let sig: Groth2Sig = Groth2Sig::new(msgs.as_slice(), &sk2, &params2)?;
     ```
-- An existing signature can be randomized by calling `randomize` on the siganture with a randomly chosen field element.
+- An existing signature can be randomized by calling `randomize` on the signature with a randomly chosen field element.
     ```rust
     let r = FieldElement::random();
     let sig_randomized = sig.randomize(&r);
@@ -64,7 +64,7 @@ The reason for this distinction of odd and even levels is the use of *structure 
 
 ### Issuers and delegation
 
-- Issuers are instantiated by calling `EvenLevelIssuer::new` or `OddLevelIssuer::new` by passing their level to the `new` function. Root issuers is at level 0 so can be instantiated by `EvenLevelIssuer::new(0)`. There is a another struct defined called `RootIssuer` which internally uses `EvenLevelIssuer`.
+- Issuers are instantiated by calling `EvenLevelIssuer::new` or `OddLevelIssuer::new` by passing their level to the `new` function. Root issuers is at level 0 so can be instantiated by `EvenLevelIssuer::new(0)`. There is a another struct defined called `RootIssuer` which is kinda proxy to `EvenLevelIssuer`.
 
     ```rust
     // A level 0 issuer (root issuer)
@@ -294,7 +294,7 @@ Thus the commitment can be created using 3 methods, either `AttributeToken::comm
 
 Most of the implemented logic follows the paper with the corrections called out in the code.  
 At several places, computations like e(a, b)<sup>c</sup> have been replaced with e(a<sup>c</sup>, b) since they are about 30% faster. Attempts are made to replace computations in G2 with computations in G1 inside pairings.  
-Regarding the implementation of `verify_fast` function, it applies this observation to pairings: if it needs to be cheched that a == b and c == d and e == f, then choose a random number `r` and check whether (a-b) + (c-d)\*r + (e-f)\*r<sup>2</sup> == 0. This is because this degree 2 polynomial can have at most 2 roots and if r is not a root then all the coefficients must be 0. If r is a randomly chosen element from a sufficiently large set, then the chances of r being a root are negligible.   
+Regarding the implementation of `verify_fast` function, it applies this observation to pairings: if it needs to be checked that a == b and c == d and e == f, then choose a random number `r` and check whether (a-b) + (c-d)\*r + (e-f)\*r<sup>2</sup> == 0. This is because this degree 2 polynomial can have at most 2 roots and if r is not a root then all the coefficients must be 0. If r is a randomly chosen element from a sufficiently large set, then the chances of r being a root are negligible.   
 In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(f, g) = 1, 
     - pick a random value r in Z<sub>p\*</sub> and 
     - check e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 
@@ -305,7 +305,7 @@ In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(
 # Drawbacks
 [drawbacks]: #drawbacks
 
-This solution should not be used when privacy among issuers is desired. Secondly since each issuer can add iany attributes in its issued credential, if policies for issuance are not properly defined, malicious issuers might be able to issue credentials with unintended attributes (by the delegator) leading to privilege escalation. 
+This solution should not be used when privacy among issuers is desired. Secondly since each issuer can add any attributes in its issued credential, if policies for issuance are not properly defined, malicious issuers might be able to issue credentials with unintended attributes (by the delegator) leading to privilege escalation. 
 
 # Rationale and alternatives
 [alternatives]: #alternatives
