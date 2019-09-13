@@ -13,7 +13,7 @@ and Their Application to
 Blockchain](https://acmccs.github.io/papers/p683-camenischA.pdf) by Camenisch
 et.al. This allows issuers to delegate issuance rights to other entities such
 that the presentations from their issued credentials do not reveal their
-identity but only the identity of the the first issuer in the delegation chain.
+identities but only the identity of the the first issuer in the delegation chain.
 This also allows issuers at each level to add attributes in their issued
 credentials. However, downstream issuers in the delegation do learn about all
 the upstream issuers, i.e. there is no privacy among issuers. This
@@ -41,56 +41,56 @@ verifier is called the *root issuer* or the *root delegator*. All issuers have a
 signing and verification key but only the root issuer's verification key is
 known to the verifier. The linear structure starting at the root issuer and
 consisting of subsequent issuers involved in delegation is called the *issuer
-chain*. For reasons explained later, an issuer is either an odd level issuer or
-an even level issuer depending on its position in the issuer chain. The *root
-issuer* is always an even level issuer. Similarly, the linear structure starting
+chain*. For reasons explained later, an issuer is either an odd-level issuer or
+an even-level issuer depending on its position in the issuer chain. The *root
+issuer* is always an even-level issuer. Similarly, the linear structure starting
 at the root issuer's credential and consisting of subsequent issuers'
 credentials is called the *credential chain*. A credential is either an odd
-level credential or even level credential depending on the issuer; an even level
-issuer always issues an odd level credential and vice versa. Each credentials in
+level credential or even-level credential depending on the issuer; an even-level
+issuer always issues an odd-level credential and vice versa. Each credentials in
 the credential chain is a also called a *link* and has a level which is a
-monotonically increasing number starting from 1 and has no gaps. The credential
-(or link) issued by root issuer has level 1, the subsequent link will have level
-2 and so on. During delegation (credential issuance), the delegator in addition
-to issuing a credential, sends its credential chain also to the delgatee. A
+monotonically increasing number starting from 1 with no gaps. The credential
+(or link) issued by the root issuer has level 1, the subsequent link will have level
+2, and so on. During delegation (credential issuance), the delegator, in addition
+to issuing a credential, sends its credential chain also to the delegatee. A
 presentation created from the delegated credential is called *attribute token*.
 
-Because verification keys of even level issuers is cryptographically different
-from verification keys of odd level issuers, verification key of even level
-issuers is called even level verification key and of odd level issuers is called
-odd level verification key. When an entity wants to be an issuer at both even
-and odd levels, it will own two keypairs, one for odd level and one for even
+Because the verification keys of even-level issuers are cryptographically different
+from the verification keys of odd-level issuers, the verification key of even-level
+issuers are called even-level verification keys and of odd-level issuers are called
+odd-level verification keys. When an entity wants to be an issuer at both even
+and odd-levels, it must own two keypairs, one for odd-level and one for even
 level. Throughout this document and the code, the terms sigkey and verkey are
 used to refer to signing key and verification key.
 Lets look at an example. Consider an issuer chain of Alice -> Bob -> Carol ->
 Dave where Alice is the root issuer. Alice will issue a delegatable credential
 to Bob, Bob will issue a delegatable credential to Carol, Carol will issue a
-delegatable credential to Dave and Dave will create a presentation from its
-credential that will be verified by Eva. Alice is an even level issuer who has
-an even level verkey, it will issue an odd level credential with level 1 to Bob
-who has an odd level verkey and who will issue an even level credential with
-level 2 to Carol who has an even level verkey and who will issue an odd level
-credential with level 3 to Dave who has an odd level verkey. If Dave also
-interacted with an odd level issuer, he will need to have an even level verkey
-(should be with a different secret key).  
+delegatable credential to Dave and Dave will create a presentation from his
+credential that will be verified by Eva. Alice is an even-level issuer who has
+an even-level verkey, she will issue an odd-level credential with level 1 to Bob
+who has an odd-level verkey and he will issue an even-level credential with
+level 2 to Carol who has an even-level verkey and she will issue an odd-level
+credential with level 3 to Dave who has an odd-level verkey. If Dave also
+requests credential from an odd-level issuer, he will need to have an even-level verkey
+(with a different secret key).  
 During delegation, the delegator also signs the delegatee's verkey as one of the
 attributes of the credential. Thus the level 1 credential above (issued to Bob)
-will have Bob's odd level verkey as one of the attributes, the level 2
-credential issued to Carol will have Carol's even level verkey as one of the
+will have Bob's odd-level verkey as one of the attributes, while the level 2
+credential issued to Carol will have Carol's even-level verkey as one of the
 attributes and so on. When Alice delegates to Bob, she sends one credential to
 Bob, say C1, when Bob delegates to Carol, he creates a new credential C2 for
 Carol and sends C1 in addition to C2 to Carol. Similarly when Carol will issue a
 credential, she will also send C1 and C2 in addition to her issued credential.
 
-The reason for this distinction of odd and even levels is the use of *structure
+The reason for the distinction between odd and even-levels is the use of *structure
 preserving cryptography*. A cryptographic scheme is called structure preserving
 if its all public inputs and outputs consist of group elements of bilinear
 groups and the functional correctness can be verified only by computing group
 operations, testing group membership and evaluating pairing product
 equations.[^1] As a result, the messages are also group elements (of G1 or G2)
 unlike some other schemes where the messages are elements of finite fields. The
-verification key will be in a different group than the message so if the message
-is in G1, verification key would be in G2 and vice-versa. Now we saw above that
+verification key will be in a different group than the message, so if the message
+is in G1, verification key will be in G2, and vice-versa. We saw above that
 the delegatee's verkey is signed as part of the delegated credential. So if the
 delegator has verkey in group G2, it will sign messages in group G1 which means
 the delegatee needs to have a verkey in group G1. Similarly when this delegatee
@@ -98,8 +98,8 @@ issues a credential, it will sign the subsequent delegatee's verkey which needs
 to be in G2 and these alternations will continue. Two variations of Groth
 signatures (described in the paper) are used, the algorithms are same but one,
 called `Groth1`, has messages in G1 and verkey in G2 and the other, called
-`Groth2`, has messages in G2 and verkey in G1. Even level issuer use Groth1
-signature and have verkey in group G2 while odd level issuers use Groth2
+`Groth2`, has messages in G2 and verkey in G1. even-level issuers use Groth1
+signature and have verkey in group G2 while odd-level issuers use Groth2
 signatures and have verkey in G1. Signing key is a single field element whereas
 the verification key size depends linearly on the maximum number of supported
 attributes.
@@ -120,7 +120,7 @@ attributes.
     // OR for Groth2
     let params2: Groth2SetupParams = GrothS2::setup(max_attrs, label);
     ```
-- Signing keys can be generated by calling `GrothS1::keygen` or `GrothS2::keygen`. Takes the corresponding setup parameters.
+- Signing keys can be generated by calling `GrothS1::keygen` or `GrothS2::keygen`. Each takes the corresponding setup parameters.
     ```rust
     let (sk1: GrothSigkey, vk1: Groth1Verkey) = GrothS1::keygen(&params1);
     // OR for Groth2
@@ -138,7 +138,7 @@ attributes.
     let r = FieldElement::random();
     let sig_randomized = sig.randomize(&r);
     ```
-- 2 methods for signature verification, `verify` and `verify_fast`, both with the same API. `verify` computes several pairings to verify the signature whereas `verify_fast` does only 1 big multi-pairing.
+- 2 methods for signature verification, `verify` and `verify_fast`, both with the same API. `verify` computes several pairings to verify the signature whereas `verify_fast` does only 1 big multi-pairing. `verify_fast` has a negligibly higher probability of failure than `verify`. It's `O(n)/|F|` where `n` is the number of attributes and `|F|` is the order of the subgroup, `|F|` usually is > 2<sup>250</sup>.
 
     ```rust
     sig.verify(msgs.as_slice(), &vk, &params)?
@@ -151,8 +151,6 @@ attributes.
 - Issuers are instantiated by calling `EvenLevelIssuer::new` or
   `OddLevelIssuer::new` by passing their level to the `new` function. Root
   issuers is at level 0 so can be instantiated by `EvenLevelIssuer::new(0)`.
-  There is a another struct defined called `RootIssuer` which is kinda proxy to
-  `EvenLevelIssuer`.
 
     ```rust
     // A level 0 issuer (root issuer)
@@ -161,6 +159,24 @@ attributes.
     let l_1_issuer = OddLevelIssuer::new(1)?;
     // A level 2 issuer
     let l_2_issuer = EvenLevelIssuer::new(2)?;
+    ```
+
+- There is a another struct defined called `RootIssuer` which is like a proxy to
+  `EvenLevelIssuer`.
+    ```rust
+    pub struct RootIssuer {}
+
+    pub type RootIssuerVerkey = EvenLevelVerkey;
+
+    impl RootIssuer {
+        pub fn keygen(setup_params: &Groth1SetupParams) -> (Sigkey, RootIssuerVerkey)
+
+        pub fn delegate(
+            mut delegatee_attributes: G1Vector,
+            delegatee_vk: OddLevelVerkey,
+            sk: &Sigkey,
+            setup_params: &Groth1SetupParams) -> DelgResult<CredLinkOdd>
+    }
     ```
 
 - Issuers generate their keys with `EvenLevelIssuer::keygen` or
@@ -183,15 +199,15 @@ attributes.
     let (root_issuer_sk: Sigkey, root_issuer_vk: RootIssuerVerkey) = RootIssuer::keygen(&params1);
     ```
 
-- A credential is a called a link and there credentials issued by
+- A credential is a called a link and the credentials issued by
   `EvenLevelIssuer`s are called `CredLinkOdd` and credentials issued by
   `OddLevelIssuer`s are called `CredLinkEven`.
 - Issuers can delegate by calling `delegate` method that takes the attributes to
-  sign, who to delegate to resulting in a credential. The even level credential
-  is called `CredLinkEven` and odd level credential is called `CredLinkOdd`. 
+  sign, who to delegate to resulting in a credential. The even-level credential
+  is called `CredLinkEven` and odd-level credential is called `CredLinkOdd`. 
 
     ```rust
-    // An even level issuer delegating to an issuer with odd level verkey `delegatee_verkey` resulting in an odd level credential
+    // An even-level issuer delegating to an issuer with odd-level verkey `delegatee_verkey` resulting in an odd-level credential
     let attributes_1: G1Vector = ....;
     let cred_link_1: CredLinkOdd = even_level_issuer
             .delegate(
@@ -201,7 +217,7 @@ attributes.
                 &params1,
             )?;
     
-    // An odd level issuer delegating to an issuer with even level verkey `delegatee_verkey` resulting in an even level credential
+    // An odd-level issuer delegating to an issuer with even-level verkey `delegatee_verkey` resulting in an even-level credential
     let attributes_2: G2Vector = ....;
     let cred_link_2: CredLinkEven = odd_level_issuer
             .delegate(
@@ -233,20 +249,20 @@ attributes.
 - To verify the correctness of link, call `verify` on it with delegator public
   key, delegatee public key and setup params.  
     ```rust
-    // For odd level links
+    // For odd-level links
     cred_link_1.verify(&delegatee_vk, &delegator_vk, &params1)
-    // For even level links
+    // For even-level links
     cred_link_2.verify(&delegatee_vk, &delegator_vk, &params2)
     ```
 - The chain of credentials is kept in `CredChain` which internally has 2 lists,
-  1 for odd level links and 1 for even. 
+  1 for odd-level links and 1 for even. 
     ```rust
     pub struct CredChain {
         pub odd_links: Vec<CredLinkOdd>,
         pub even_links: Vec<CredLinkEven>,
     }
     ```
-- Even or odd level links can be added by calling `extend_with_even` or
+- Even or odd-level links can be added by calling `extend_with_even` or
   `extend_with_odd` on the chain. These methods will verify that the link has
   appropriate level.
     ```rust
@@ -257,21 +273,21 @@ attributes.
     chain_1.extend_with_even(cred_link_2)?
     ```
 - To verify that all delegations are valid in the chain, call
-  `verify_delegations` on the chain. It takes even level verkeys and odd level
-  verkeys involved in the delegation. In addition to verify each link with call
-  to its `verify`, it will also check that there are no gaps or duplicate levels
+  `verify_delegations` on the chain. It takes even-level and odd-level
+  verkeys involved in the delegation. In addition to verifying each link with a call
+  to its `verify` method, it will also check that there are no gaps or duplicate levels
   in the chain.
     ```rust
     chain_1
         .verify_delegations(
-            vec![&level_0_issuer_vk, &level_2_issuer_vk],   // even level verkeys
-            vec![&level_1_issuer_vk],   // odd level verkeys
+            vec![&level_0_issuer_vk, &level_2_issuer_vk],   // even-level verkeys
+            vec![&level_1_issuer_vk],   // odd-level verkeys
             &params1,
             &params2
         )?
     ```
 
-- `CredChain`'s size can be found out by calling `CredChain::size`. Number of
+- `CredChain`'s size can be found out by calling `CredChain::size`. The number of
   odd or even links can be found by calling `CredChain::odd_size` or
   `CredChain::even_size`.
 - When only some links of the `CredChain` are needed,
@@ -307,10 +323,10 @@ attributes.
   commitments are generated and the response phase accepts the challenge. These
   are intentionally decoupled so that this can be used in a higher level
   protocol.
-- To generate the commitment, call `commitment` method with the indices of the
+- To generate the commitment, call the `commitment` method with the indices of the
   revealed attributes at each level. The indices at each level are a set of
-  integers. When not revealing any attributes at a level, pass empty HashSet at
-  that level. The `commitment` method results in `AttributeTokenComm` object
+  integers. When not revealing any attributes at a level, pass an empty HashSet at
+  that level. The `commitment` method results in an `AttributeTokenComm` object
   which can be converted to bytes by calling `to_bytes` so that those bytes can
   be used in challenge computation. Or for testing,
   `AttributeToken::gen_challenge` can be used that takes `AttributeTokenComm`
@@ -340,7 +356,7 @@ attributes.
     let com_2: AttributeTokenComm = ...;
     let bytes = com_2.to_bytes();
     ```
-- To generate response, call `AttributeToken::response`, passing the commitment, signing key of the entity creating the presentation, challenge and the even and odd level verkeys.
+- To generate response, call `AttributeToken::response`, passing the commitment, signing key of the entity creating the presentation, challenge and the even and odd-level verkeys.
     ```rust
     let resp_2: AttributeTokenResp = at
             .response(
@@ -351,7 +367,7 @@ attributes.
                 vec![&l_1_issuer_vk],
             )?
     ```
-- The verifies with then call `AttributeToken::reconstruct_commitment` to
+- The verifier with then call `AttributeToken::reconstruct_commitment` to
   reconstruct the commitment that the prover would have created. He can now hash
   it into the challenge to compare with the prover's challenge.
     ```rust
@@ -437,20 +453,18 @@ observation to pairings: if it needs to be checked that a == b and c == d and e
 most 2 roots and if r is not a root then all the coefficients must be 0. If r is
 a randomly chosen element from a sufficiently large set, then the chances of r
 being a root are negligible.   
-In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and
-    e(f, g) = 1, - pick a random value r in Z<sub>p\*</sub> and - check e(a,b)
-    \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 - e(a,b) \*
-    e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> = e(a,b) \*
-    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g). Exponent moved to
-    1st element of pairing since computation in group G1 is cheaper. - Now use a
-    single multi-pairing rather than 3 pairings to compute e(a,b) \*
+In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(f, g) = 1, 
+    - pick a random value r in Z<sub>p\*</sub> and 
+    - check e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 - e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> = e(a,b) \*
+    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g). Exponent moved to 1st element of pairing since computation in group G1 is cheaper. 
+    - Now use a single multi-pairing rather than 3 pairings to compute e(a,b) \*
     e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g)
 
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
-This solution should not be used when privacy among issuers is desired. Secondly
+This solution should not be used when privacy among issuers is desired. Secondly,
 since each issuer can add any attributes in its issued credential, if policies
 for issuance are not properly defined, malicious issuers might be able to issue
 credentials with unintended attributes (by the delegator) leading to privilege
@@ -459,15 +473,15 @@ escalation.
 # Rationale and alternatives
 [alternatives]: #alternatives
 
-An expensive alternative of delegatable credentials is the holder to get
+An expensive alternative to delegatable credentials is the holder to get
 credential directly from the root issuer. The expensiveness of this is not just
 computational but operational too.  
 There are some alternatives which offer privacy among issuers as well but have
 different tradeoffs. [Delegatable Attribute-based Anonymous Credentials from
 Dynamically Malleable Signatures](https://eprint.iacr.org/2018/340) requires
-presence of a trusted third party. [Delegatable Anonymous Credentials from
+the presence of a trusted third party. [Delegatable Anonymous Credentials from
 Mercurial Signatures](https://eprint.iacr.org/2018/923) does not support
-credential with attributes.
+credentials with attributes.
 
 
 # Prior art
@@ -485,8 +499,9 @@ Belenkiy et al.
 # Unresolved questions
 [unresolved]: #unresolved-questions
 
-- Its expected that the API can be more refined like does it make sense to use
+- It is expected that the API can be more refined, e.g., it may make sense to use
   Rust enums for wrapping EvenLevel(Issuer/Verkey).
+- Should `verify` be removed in favour of `verify_fast`?
 - Should the credential chain support more methods?
 - Can the protocol be made more efficient by using recent research in structure
   preserving cryptography?
