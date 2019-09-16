@@ -59,13 +59,15 @@ There are 3 mainly entities in anonymous credentials, the *issuer* which signs a
     }
     ```
     Refer tests [test_signature_many_committed_messages](https://github.com/hyperledger/ursa/pull/46/files#diff-6cb154fe72e95313cfe9016f86d71e73R151) and [test_signature_known_and_committed_messages](https://github.com/hyperledger/ursa/pull/46/files#diff-6cb154fe72e95313cfe9016f86d71e73R171) for the unblinding an verification of signature.  
-- To prove knowledge of the signature, `PoKOfSignature` is used. The protocol has 2 phases, in the pre-challenge phase, the signature is transformed to an aggregate signature and a PoK of the underlying multi-message is created using `PoKOfSignature::init`. The `revealed_msg_indices` specifies the indices of messages that are revealed to the verifier and hence do not need to be included in the proof of knowledge.
+- To prove knowledge of the signature, `PoKOfSignature` is used. The protocol has 2 phases, in the pre-challenge phase, the signature is transformed to an aggregate signature and a PoK of the underlying multi-message is created using `PoKOfSignature::init`. `revealed_msg_indices` specifies the indices of messages that are revealed to the verifier and hence do not need to be included in the proof of knowledge.  
+`blindings` specifies randomness to be used while proving knowledge of the unrevealed messages in the signature. If `blindings` is `None`, a random field element is generated corresponding to each unrevealed message. If `blindings` is to be provided, it must be provided for all unrevealed messages. This parameter is useful when the knowledge of same message is being proved in another relation as well and it needs to be proved that message is same in both relations, eg. If there are 2 signatures whose knowledge is being proved and it also needs to be proven that a specific message under both signatures is equal, then in both proof of knowledge protocols, the same blinding factor must be used for that message. The test `test_PoK_multiple_sigs_with_same_msg` demonstrates that. Another use case can be of proving that signature contains a message present in another Pedersen commitment.
     ```rust
     impl PoKOfSignature {
         pub fn init(
             sig: &Signature,
             vk: &Verkey,
             messages: &[FieldElement],
+            blindings: Option<&[FieldElement]>,
             revealed_msg_indices: HashSet<usize>,
         ) -> Result<Self, PSError>
     }
@@ -96,10 +98,10 @@ There are 3 mainly entities in anonymous credentials, the *issuer* which signs a
 The implementation that the RFC is describing is the implementation of sections 6.1 and 6.2 of the [PS signatures paper](https://eprint.iacr.org/2015/525) and an attempt has been made to use the same symbol names in the code as used in the paper. Some implementation optimizations have been done like the use of multi-pairings or multi-exponentiations (both constant and variable time). The PoK protocol for Pedersen commitments used is described in this [RFC](https://github.com/hyperledger/ursa-rfcs/pull/10). 
 
 The `Signature` implementation is based on section 6.1 of the paper and implements "A Multi-Message Protocol" with the enhancement being the support of signer-known messages also as explained below:
-    - Say the verification key supports 5 messages, the relevant generators are Y<sub>1</sub>, Y<sub>2</sub>, Y<sub>3</sub>, Y<sub>4</sub>, Y<sub>5</sub>
-    - The holder wants to reveal only last 3 message to the issuer but commits to the first 2 messages in a commitment C = g<sup>t</sup>Y<sub>1</sub><sup>m1</sup>Y<sub>2</sub><sup>m2</sup> (t is the randomness and should be preserved for unblinding the sig) and sends C to the issuer (along with a proof of knowledge).
-    - The issuer now creates D = C * Y<sub>3</sub><sup>m3</sup>Y<sub>4</sub><sup>m4</sup>Y<sub>5</sub><sup>m5</sup> where m3, m4 and m5 are known to him. The issuer will now choose a random u and create the signature (g<sup>u</sup>, (XD)<sup>u</sup>) as described in the paper.
-    - The holder will unblind the signature as described in the paper.
+- Say the verification key supports 5 messages, the relevant generators are Y<sub>1</sub>, Y<sub>2</sub>, Y<sub>3</sub>, Y<sub>4</sub>, Y<sub>5</sub>.
+- The holder wants to reveal only last 3 message to the issuer but commits to the first 2 messages in a commitment C = g<sup>t</sup>Y<sub>1</sub><sup>m1</sup>Y<sub>2</sub><sup>m2</sup> (t is the randomness and should be preserved for unblinding the sig) and sends C to the issuer (along with a proof of knowledge).
+- The issuer now creates D = C * Y<sub>3</sub><sup>m3</sup>Y<sub>4</sub><sup>m4</sup>Y<sub>5</sub><sup>m5</sup> where m3, m4 and m5 are known to him. The issuer will now choose a random u and create the signature (g<sup>u</sup>, (XD)<sup>u</sup>) as described in the paper.
+- The holder will unblind the signature as described in the paper.
 
 The `PoKOfSignature` is based on section 6.2 of the paper and the implementation follows the paper almost as-it-is. However, the product of multiple pairings is replaced with a multi-pairing for efficiency. The proof of knowledge (symbol pie in the paper) is done using [this protocol](https://github.com/hyperledger/ursa/pull/46/files#diff-168ead191b84bf0856f3d153e9da3ba5R14). 
 
