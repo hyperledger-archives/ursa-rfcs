@@ -30,7 +30,7 @@ issuing the credential, it becomes a bottleneck. But if the head decides to
 delegate the issuance rights to its subordinates, then the credential receivers
 can check that credential comes from a delegatee of the head. In addition,
 delegation provides privacy to issuers who might want to remain anonymous to
-verifiers. This [Aries RFC](https://github.com/hyperledger/aries-rfcs/pull/218)
+verifiers. This [Aries RFC](https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0104-delegatable-credentials)
 goes into more details of delegatable credentials.
 
 # Guide-level explanation
@@ -42,18 +42,23 @@ signing and verification key but only the root issuer's verification key is
 known to the verifier. The linear structure starting at the root issuer and
 consisting of subsequent issuers involved in delegation is called the *issuer
 chain*. For reasons explained later, an issuer is either an odd-level issuer or
-an even-level issuer depending on its position in the issuer chain. The *root
-issuer* is always an even-level issuer. Similarly, the linear structure starting
+an even-level issuer depending on its position in the issuer chain (if you 
+find this absurd and want to immediately know the reason for this 
+odd-even distinction, read the sub-section "Odd-Even distinction"). The *root
+issuer* is always an even-level issuer, since it occupies index 0 in the chain. 
+Similarly, the linear structure starting
 at the root issuer's credential and consisting of subsequent issuers'
 credentials is called the *credential chain*. A credential is either an odd
 level credential or even-level credential depending on the issuer; an even-level
-issuer always issues an odd-level credential and vice versa. Each credentials in
-the credential chain is a also called a *link* and has a level which is a
+issuer always issues an odd-level credential and vice versa. Each credential in
+the credential chain is also called a *link* and has a level which is a
 monotonically increasing number starting from 1 with no gaps. The credential
-(or link) issued by the root issuer has level 1, the subsequent link will have level
-2, and so on. During delegation (credential issuance), the delegator, in addition
+(or link) issued by the root issuer has level 1 (its issued to the issuer at level 1), 
+the subsequent link will have level 2 (its issued to the issuer at level 2), and so 
+on. During delegation (credential issuance), the delegator, in addition
 to issuing a credential, sends its credential chain also to the delegatee. A
-presentation created from the delegated credential is called *attribute token*.
+presentation created from the delegated credential is called *attribute token*, 
+the term *attribute token* comes from the paper.
 
 Because the verification keys of even-level issuers are cryptographically different
 from the verification keys of odd-level issuers, the verification key of even-level
@@ -82,12 +87,14 @@ Bob, say C1, when Bob delegates to Carol, he creates a new credential C2 for
 Carol and sends C1 in addition to C2 to Carol. Similarly when Carol will issue a
 credential, she will also send C1 and C2 in addition to her issued credential.
 
+## Odd-Even distinction 
+
 The reason for the distinction between odd and even-levels is the use of *structure
-preserving cryptography*. A cryptographic scheme is called structure preserving
+preserving cryptography*. According to the definition in this paper [Structure-Preserving Cryptography](https://www.iacr.org/archive/asiacrypt2015/94520356/94520356.pdf), "A cryptographic scheme is called structure preserving
 if its all public inputs and outputs consist of group elements of bilinear
 groups and the functional correctness can be verified only by computing group
 operations, testing group membership and evaluating pairing product
-equations.[^1] As a result, the messages are also group elements (of G1 or G2)
+equations". As a result, the messages are also group elements (of G1 or G2)
 unlike some other schemes where the messages are elements of finite fields. The
 verification key will be in a different group than the message, so if the message
 is in G1, verification key will be in G2, and vice-versa. We saw above that
@@ -98,11 +105,15 @@ issues a credential, it will sign the subsequent delegatee's verkey which needs
 to be in G2 and these alternations will continue. Two variations of Groth
 signatures (described in the paper) are used, the algorithms are same but one,
 called `Groth1`, has messages in G1 and verkey in G2 and the other, called
-`Groth2`, has messages in G2 and verkey in G1. even-level issuers use Groth1
+`Groth2`, has messages in G2 and verkey in G1. Even-level issuers use Groth1
 signature and have verkey in group G2 while odd-level issuers use Groth2
 signatures and have verkey in G1. Signing key is a single field element whereas
 the verification key size depends linearly on the maximum number of supported
-attributes.
+attributes. It is worth mentioning that the odd/even level API is exposed as a building 
+block and the application level code should sufficiently hide those details. eg, In the 
+credential issuance protocol, when the credential is being requested, the requester 
+would know at what level the issuer is and the requester's code will thus choose the 
+keys at the appropriate level.
 
 ## API
 
@@ -488,11 +499,11 @@ credentials with attributes.
 [prior-art]: #prior-art
 
 Delegatable anonymous credentials have been explored since the last decade and
-the first efficient (somewhat) came in 2009 by Belenkiy et al. in "Randomizable
-proofs and delegatable anonymous credentials". Although this was a significant
+the first efficient (somewhat) came in 2009 by Belenkiy et al. in "[Randomizable
+proofs and delegatable anonymous credentials](https://eprint.iacr.org/2008/428.pdf)". Although this was a significant
 efficiency improvement over previous works, it was still impractical. Chase et
 al. gave a conceptually novel construction of delegatable anonymous credentials
-in 2013 in "Complex unary transformations and delegatable anonymous credentials"
+in 2013 in ["Complex unary transformations and delegatable anonymous credentials"](https://eprint.iacr.org/2013/179.pdf)
 but the resulting construction was essentially as inefficient as that of
 Belenkiy et al.   
 
