@@ -95,7 +95,7 @@ There are 3 mainly entities in anonymous credentials, the *issuer* which signs a
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-The implementation that the RFC is describing is the implementation of sections 6.1 and 6.2 of the [PS signatures paper](https://eprint.iacr.org/2015/525) and an attempt has been made to use the same symbol names in the code as used in the paper. Some implementation optimizations have been done like the use of multi-pairings or multi-exponentiations (both constant and variable time). The PoK protocol for Pedersen commitments used is described in this [RFC](https://github.com/hyperledger/ursa-rfcs/pull/10). 
+The implementation that the RFC is describing is the implementation of sections 6.1 and 6.2 of the [PS signatures paper](https://eprint.iacr.org/2015/525) and an attempt has been made to use the same symbol names in the code as used in the paper. Some implementation optimizations have been done like the use of multi-pairings or multi-exponentiations (both constant and variable time). The PoK protocol for Pedersen commitments used is described in this [RFC](https://github.com/hyperledger/ursa-rfcs/pull/10). PS signatures require type-3 pairings.
 
 The `Signature` implementation is based on section 6.1 of the paper and implements "A Multi-Message Protocol" with the enhancement being the support of signer-known messages also as explained below:
 - Say the verification key supports 5 messages, the relevant generators are Y<sub>1</sub>, Y<sub>2</sub>, Y<sub>3</sub>, Y<sub>4</sub>, Y<sub>5</sub>.
