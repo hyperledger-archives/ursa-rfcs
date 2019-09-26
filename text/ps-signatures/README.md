@@ -109,7 +109,7 @@ The `PoKOfSignature` is based on section 6.2 of the paper and the implementation
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Not aware of any.
+This scheme is based on the LRSW Assumption which was introduced in [1] and proven secure in the generic group model in [2] but this assumption is not popular.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
@@ -128,8 +128,17 @@ The RFC author is not aware of any implementation (open or closed source) of PS 
 
 - It is expected that proof of knowledge of signature API will be refined further through broader discussion.
 - Proving properties about signed messages (range proof) or relationships among signed messages (equality, inequality) has been considered out of scope.
+- Is the LRSW Assumption acceptable?
 
 # Changelog
 [changelog]: #changelog
 
 - 
+
+
+# References
+[1] Anna Lysyanskaya, Ronald L. Rivest, Amit Sahai, and Stefan Wolf. Pseudonym systems. In Howard M.
+Heys and Carlisle M. Adams, editors, SAC 1999, volume 1758 of LNCS, pages 184–199. Springer,
+August 2000.  
+[2] Victor Shoup. Lower bounds for discrete logarithms and related problems. In Walter Fumy, editor,
+EUROCRYPT’97, volume 1233 of LNCS, pages 256–266. Springer, May 1997.
