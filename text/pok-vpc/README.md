@@ -53,7 +53,7 @@ The macro is defined here [here](https://github.com/hyperledger/ursa/pull/46/fil
 
 The following describes how the 3 entities are used.
 - For the 1st step (commitment), the prover first creates a `ProverCommitting` object. This object holds the generators and random values used during this step. 
-- Prover calls `ProverCommitting::commit` for each proof of knowledge that he wishes to do. This function takes a generator (`gen`) and optionally takes a randomness. If not supplied, it creates its own.
+- Prover calls `ProverCommitting::commit` for each proof of knowledge that he wishes to do. This function takes a generator (`gen`) and optionally takes a randomness. If not supplied, it creates its own. An alternate API could have exposed 2 methods, one commit method that expects a blinding and one that does not.
     ```rust
     impl $ProverCommitting {
         .....
@@ -75,7 +75,7 @@ The following describes how the 3 entities are used.
         }
     }
     ```
-- `ProverCommitted` marks the end of commitment phase and has the final commitment.
+- `ProverCommitted` marks the end of commitment phase and has the final commitment. The commitment is created through a multi-exponentiation which is more efficient than doing one exponentiation every time `commit` is called.
 - Now if this is a non-interactive protocol and the prover wishes to compute the challenge, `ProverCommitted` has a method `ProverCommitted::gen_challenge` to generate the challenge by hashing all generators and commitment. It is optional to use this method as the challenge may come from a super-protocol or from verifier. It takes a vector of bytes that it includes for hashing for computing the challenge. In an interactive proof, the prover can simply receive the challenge.
     ```rust
     impl $ProverCommitted {
