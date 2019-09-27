@@ -464,12 +464,12 @@ observation to pairings: if it needs to be checked that a == b and c == d and e
 most 2 roots and if r is not a root then all the coefficients must be 0. If r is
 a randomly chosen element from a sufficiently large set, then the chances of r
 being a root are negligible.   
-In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(f, g) = 1, 
-    - pick a random value r in Z<sub>p\*</sub> and 
+In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(f, g) = 1,   
+    - pick a random value r in Z<sub>p\*</sub> and  
     - check e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 - e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> = e(a,b) \*
-    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g). Exponent moved to 1st element of pairing since computation in group G1 is cheaper. 
+    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g). Exponent moved to 1st element of pairing since computation in group G1 is cheaper.   
     - Now use a single multi-pairing rather than 3 pairings to compute e(a,b) \*
-    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g)
+    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g)   
 
 
 # Drawbacks
@@ -479,7 +479,7 @@ This solution should not be used when privacy among issuers is desired. Secondly
 since each issuer can add any attributes in its issued credential, if policies
 for issuance are not properly defined, malicious issuers might be able to issue
 credentials with unintended attributes (by the delegator) leading to privilege
-escalation. 
+escalation. Also the shceme does not support blind signatures. So to add a blinded attribute in the signature, the signature should contain the blinded attribute and the prover should prove the knowledge (or other predicates) of the attribute separately, like it done for proving knowledge of secret key when the public key is embedded in the credential.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
