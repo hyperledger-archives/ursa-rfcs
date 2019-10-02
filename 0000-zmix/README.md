@@ -61,11 +61,15 @@ The library provides two features: construction and verification of
 zero-knowledge proofs. 
 
 To construct a proof, zmix requires a `ProofSpec s` and a `Witness w`
-(which is a valid witness for `p`), and will output a `Proof p`. 
-
+(which is a valid witness for `p`), and will output a `Proof p`.  
 To verify a proof, zmix requires a `ProofSpec s` and a `Proof p`, and will
 output a boolean indicating whether the proof was valid (true) or invalid
-(false).
+(false).  
+Typically a prover will be requested by a verifier to present a proof through
+an artifact (Aries calls such an artifact a proof-request). The prover parses that 
+artifact to create a <em>ProofSpec</em> which is then used (with a witness) to 
+create a proof. The verifier will use the same process to create a <em>ProofSpec</em>.
+
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -77,9 +81,9 @@ Conceptually, the zmix library will offer the functions:
 
 where the proof specification contains
 
-1. the number of secrets involved in the zero-knowlege proof (we call these
+1. the number of secrets involved in the zero-knowledge proof (we call these
 _messages_), and
-1. a list of _statements_, where each statement represents a _part_ of the overall zero-knowlege proof:
+1. a list of _statements_, where each statement represents a _part_ of the overall zero-knowledge proof:
 
 ```
 pub struct ProofSpec {
@@ -200,7 +204,7 @@ Zmix plans to offer the following proof modules for the following statement type
 
 - Signatures
     - Boneh Boyen Shacham
-    - Pointcheval Saunders
+    - Pointcheval Sanders
 - Pedersen commitments
 - Bulletproof intervals
 - Bulletproof set membership inclusive and exclusive
