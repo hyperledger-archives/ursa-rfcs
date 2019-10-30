@@ -149,12 +149,12 @@ keys at the appropriate level.
     let r = FieldElement::random();
     let sig_randomized = sig.randomize(&r);
     ```
-- 2 methods for signature verification, `verify` and `verify_fast`, both with the same API. `verify` computes several pairings to verify the signature whereas `verify_fast` does only 1 big multi-pairing. `verify_fast` has a negligibly higher probability of failure than `verify`. It's `O(n)/|F|` where `n` is the number of attributes and `|F|` is the order of the subgroup, `|F|` usually is > 2<sup>250</sup>.
+- 2 methods for signature verification, `verify` and `verify_batch`, both with the same API. `verify` computes several pairings to verify the signature whereas `verify_batch` does only 1 big multi-pairing. `verify_batch` has a negligibly higher probability of failure (less soundness) than `verify`. It's `O(n)/|F|` where `n` is the number of attributes and `|F|` is the order of the subgroup, `|F|` usually is > 2<sup>250</sup>.
 
     ```rust
     sig.verify(msgs.as_slice(), &vk, &params)?
     // Or for fast verification
-    sig.verify_fast(msgs.as_slice(), &vk, &params)?
+    sig.verify_batch(msgs.as_slice(), &vk, &params)?
     ```
 
 ### Issuers and delegation
@@ -457,13 +457,14 @@ in the code.
 At several places, computations like e(a, b)<sup>c</sup> have been replaced with
 e(a<sup>c</sup>, b) since they are about 30% faster. Attempts are made to
 replace computations in G2 with computations in G1 inside pairings.  
-Regarding the implementation of `verify_fast` function, it applies this
+Regarding the implementation of `verify_batch` function, it applies this
 observation to pairings: if it needs to be checked that a == b and c == d and e
 == f, then choose a random number `r` and check whether (a-b) + (c-d)\*r +
 (e-f)\*r<sup>2</sup> == 0. This is because this degree 2 polynomial can have at
 most 2 roots and if r is not a root then all the coefficients must be 0. If r is
 a randomly chosen element from a sufficiently large set, then the chances of r
-being a root are negligible.   
+being a root are negligible. This is a slight modification of the small-exponents technique 
+described in [Practical Short Signature Batch Verification](https://eprint.iacr.org/2008/015)  
 In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(f, g) = 1,   
     - pick a random value r in Z<sub>p\*</sub> and  
     - check e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 - e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> = e(a,b) \*
@@ -512,7 +513,7 @@ Belenkiy et al.
 
 - It is expected that the API can be more refined, e.g., it may make sense to use
   Rust enums for wrapping EvenLevel(Issuer/Verkey).
-- Should `verify` be removed in favour of `verify_fast`?
+- Should `verify` be removed in favour of `verify_batch`?
 - Should the credential chain support more methods?
 - Can the protocol be made more efficient by using recent research in structure
   preserving cryptography?
