@@ -1,20 +1,4 @@
-\def\fullversionflag{1}
 
-\ifodd\fullversionflag
-  \documentclass[letterpaper,11pt]{article}
-\else
- \documentclass{llncs}
-\fi
-
-\input{flamacro}
-\input{hartm_macro_safe}
-\usepackage{longtable}
-
-\title{Encryption and Interface Ideas for Ursa--DRAFT 1.0}
-\author{Mike Lodder, Hart Montgomery, YOUR NAME HERE}
-
-\begin{document}
-\maketitle
 
 In this document, we describe a philosophy and approach for interfaces for Ursa.  Our primary goals are twofold:  make an interface that is easy for developers skilled in cryptography to customize, but difficult for others to misuse.  To that end, we describe two sets of interfaces:
 
