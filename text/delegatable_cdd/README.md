@@ -297,6 +297,16 @@ keys at the appropriate level.
             &params2
         )?
     ```
+- A faster way to verify that all delegations are valid in the chain is to batch the pairing-product checks for all links using the same technique used in `verify_batch`. The method for that is `verify_delegations_batched`. This is functionally equivalent to `verify_delegations` but runs faster by negligibly dropping the soundness. Note that the method signature is same as `verify_delegations`.
+    ```rust
+    chain_1
+        .verify_delegations_batched(
+            vec![&level_0_issuer_vk, &level_2_issuer_vk],   // even-level verkeys
+            vec![&level_1_issuer_vk],   // odd-level verkeys
+            &params1,
+            &params2
+        )?
+    ```
 
 - `CredChain`'s size can be found out by calling `CredChain::size`. The number of
   odd or even links can be found by calling `CredChain::odd_size` or
@@ -470,7 +480,9 @@ In a pairing scenario if verifier had to check if e(a,b) = 1, e(c, d) = 1 and e(
     - check e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> equals 1 - e(a,b) \* e(c,d)<sup>r</sup> \* e(f,g)<sup>r<sup>2</sup></sup> = e(a,b) \*
     e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g). Exponent moved to 1st element of pairing since computation in group G1 is cheaper.   
     - Now use a single multi-pairing rather than 3 pairings to compute e(a,b) \*
-    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g)   
+    e(c<sup>r</sup>, d) \* e(f<sup>r<sup>2</sup></sup>, g)  
+
+The same technique is applied to verifying all delegations in the chain in the method `verify_delegations_batched`.
 
 
 # Drawbacks
