@@ -169,51 +169,6 @@ out which protocols from the internal interface to use and create an appropriate
 we can store state in our *self* object,  we can keep track of the parameters here.  This way, a
 developer that wants to change between different algorithms only has to modify the “params” on the cryptosystem description.
 
-## Advanced Signature Interface
-We next describe interfaces for our advanced signatures.
-
-### Threshold Signatures
-
-Our definitions are loosely based on those from [BGG+18](https://eprint.iacr.org/2017/956.pdf) and [ACC+2019](https://eprint.iacr.org/2019/1058.pdf)
-
-```rust
-pub struct ThresholdSignature {
-fn new(params: TSParams) -> Self;
-fn key_gen(&self) -> Result< (TSPublicParams, MasterVerifyingKey, Vec[KeyPair]),
-Error>;         //needs to return an array of keys
-fn part_sign(&self, sk: &SigningKey, message: &[u8]) -> Result<Vec<u8>, Error>;
-fn part_verify(&self, vk: &VerifyingKey, message: &[u8], signature: &[u8]) -> bool;
-fn combine(&self, pp: &TSPublicParams, SignatureList: &[u8; Self:ThresholdSize])
--> Result<Vec<u8>, Error>;
-fn verify(&self, mvk: MasterVerifyingKey, message: &[u8], signature: &[u8])
--> bool // just reject failed attempts no matter the cause.
-}
-``` 
-
-### Multisignatures
-
-Our definitions in this section follow those of [BDN18](https://eprint.iacr.org/2018/483.pdf)
-
-```rust
-pub struct MultiSignature {
-fn new(params: MSParams) -> Self;
-fn key_gen(&self) -> Result<KeyPair, Error>; //same syntactically as regular sig
-fn sign(&self, sk: &SigningKey, message: &[u8]) -> Result<Vec[u8], Error>;
-//same as regular sig
-fn aggregate(&self, VKList: &[VerifyingKey], SigList:&[u8]) -> Result<Vec<u8>, Error>;
-fn verify(&self, VKList: &[VerifyingKey], message: &[u8], signature: &[u8]) ->
-bool; //don’t return error, just reject.
-}
-```
-
-If the multi-signature also supports public key aggregation, it can also extend the above struct
-with the following functions.
-
-```rust
-fn agVK_gen(&self, VKList: &[VerifyingKey]) -> Result<agVerifyingKey, Error>;
-fn agVK_verify(&self, agVK: agVerifyingKey, message: &[u8], signature: &[u8]) -> bool;
-```
-
 ## Provider Architecture and Implementations
 
 # Rationale and alternatives
