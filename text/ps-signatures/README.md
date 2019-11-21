@@ -83,6 +83,20 @@ There are 3 mainly entities in anonymous credentials, the *issuer* which signs a
         ) -> Result<Self, PSError>
     }
     ```
+- To generate the challenge, the prover will need to get bytes for the pre-challenge phase. This can be done by using `PoKOfSignature::to_bytes` method.
+- The verifier generates the challenge by retrieving all relevant bytes for the pre-challenge phase by calling `PoKOfSignatureProof::get_bytes_for_challenge`. `revealed_msg_indices` corresponds to the messages revealed to the verifier since they are not included in the proof of knowledge protocol.
+    ```rust
+    impl PoKOfSignatureProof {
+        pub fn get_bytes_for_challenge(
+            &self,
+            revealed_msg_indices: HashSet<usize>,
+            vk: &Verkey,
+            params: &Params,
+        ) -> Vec<u8> {
+            ....
+        }
+    }
+    ```
 - After the challenge is generated (or received in case of an interactive protocol), `PoKOfSignature::gen_proof` is used to create the proof `PoKOfSignatureProof`. 
     ```rust
     impl PoKOfSignature {
