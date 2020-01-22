@@ -11,7 +11,7 @@ Zmix is a library for expressing, constructing, and verifying non-interactive
 zero-knowledge proofs (ZKPs). A broad class of zero-knowledge proofs is 
 supported. Schnorr-type proofs are used for many parts and to glue pieces
 together, while individual parts of a proof may use other zero-knowledge
-techniques. 
+techniques. There is a PoC [here](https://github.com/lovesh/ursa/blob/zmix/libzmix/src/zkl/sample_proof.rs) but this doc still needs alignment with the PoC. 
 
 # Motivation
 [motivation]: #motivation
@@ -79,17 +79,25 @@ Conceptually, the zmix library will offer the functions:
 * `generate_proof(s: ProofSpec, w: Witness) -> Result<Proof, Error>`
 * `verify_proof(p: Proof, s: ProofSpec) -> Result<(), Error>`
 
-where the proof specification contains
+where the 
 
-1. the number of secrets involved in the zero-knowledge proof (we call these
-_messages_), and
-1. a list of _statements_, where each statement represents a _part_ of the overall zero-knowledge proof:
+1. proof specification `ProofSpec` contains a list of _statements_ `Statement`, where each statement represents a _part_ of the overall relation being proved
+1. witness `Witness` contains the witnesses for the statements. Each `Statement` can have an associated `StatementWitness`. Witness for some statements might be derived from witnesses of other statements. 
+1. proof `Proof` contains the proofs for the statements. Each `Statement` can have an associated `StatementProof`  however proofs for statements might be combined in a single `StatementProof`. Bulletproofs is an example where several proofs for statements like range proof, set membership, merkle tree membership etc are combined in a single proof. 
 
 ```
 pub struct ProofSpec {
-    message_count: usize,
     statements: Vec<Statement>,
     ...
+}
+
+pub struct Witness {
+    pub statement_witnesses: HashMap<usize, StatementWitness>,
+}
+
+pub struct Proof {
+    // Keeping statement_proofs a vector and not a map of statement index -> Proof since several statements can have a single proof, like in case of bulletproofs
+    pub statement_proofs: Vec<StatementProof>,
 }
 ```
 The library will offer and support various types of statements, such as signatures and commitments.
@@ -112,23 +120,18 @@ In accordance with the sequence diagrams shown previously, to (re-)generate the 
 ```
 pub trait ProofModule {
     fn get_hash_contribution(
-        statement: Statement,
-        witness: StatementWitness,
-        message_r_values: Vec<Vec<u8>>,
-    ) -> Result<(HashContribution, ProofModuleState), ZkLangError>;
+        &mut self,
+        witness: StatementWitness
+    ) -> Result<Vec<u8>, ZkLangError>;
     fn get_proof_contribution(
-        state: ProofModuleState,
-        challenge_hash: Vec<u8>,
+        &mut self,
+        challenge: &FieldElement,
     ) -> Result<StatementProof, ZkLangError>;
-    fn recompute_hash_contribution(
-        challenge_hash: Vec<u8>,
+    fn verify_proof_contribution(
+        &self,
+        challenge: &FieldElement,
         proof: StatementProof,
-    ) -> Result<HashContribution, ZkLangError>;
-}
-
-pub struct HashContribution(pub Vec<u8>);
-pub struct ProofModuleState {
-    state: Vec<u8>,
+    ) -> Result<bool, ZkLangError>;
 }
 ```
 
@@ -151,16 +154,15 @@ Shacham (BBS) signatures as follows:
 
 ```
 pub enum Statement {
-    SignatureBBS {
-        public_key: Vec<u8>,
-        messages: Vec<HiddenOrRevealedValue>,
-    },
+    PoKSignatureBBS(PoKSignatureBBS),
     ...
 }
 
-pub enum HiddenOrRevealedValue {
-    HiddenValueIndex(usize),
-    RevealedValue(Vec<u8>),
+....
+pub struct PoKSignatureBBS {
+    pk: BBSVerkey,
+    // Messages being revealed.
+    revealed_messages: HashMap<usize, FieldElement>,
 }
 ```
 
