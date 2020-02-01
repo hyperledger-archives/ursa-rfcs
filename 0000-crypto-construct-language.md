@@ -21,7 +21,7 @@ most complex such as multi-factor key rotation schemes.
 
 By storing cryptographic constructs in "functional" form, we abstract away the
 underlying cryptographic privitive/operation providers as well as provide a
-standardized language for describing arbitrarily complex cryptogrphic
+standardized language for describing arbitrarily complex cryptographic
 constructs in serialized form (e.g. DID document, blockchain transaction
 records, encrypted packets, etc).
 
@@ -43,10 +43,44 @@ executable with context specific references to files and commits to read data
 used in the construct creation. This RFC again seeks to standardize the
 language we use to describe those rules.
 
+To further expand on the topic of enforcing an M-of-N signatures of existing
+maintainers for any commits that change the MAINTAINERS file in a repo, the
+follow example shows how it could be accomplished. The MAINTAINERS file can
+contain a number of different CCL scripts for the governance of that file
+itself. Or the rules can be stored in another GOVERNANCE file. It doesn't
+matter.
+
+Let's assume the CCL M-of-N check script is stored in the MAINTAINERS file. It
+assumes that the list of maintainer public keys will first be pushed onto the
+stack before it gets executed and it just adds up the number of maintainer
+public keys and tests to see if that sum is greater-than-or-equal to the M
+threshold.
+
+Now, if the CCL parallel multi-sig on the commit is written so that it leaves
+a copy of the validating public key on the stack for every valid digital
+signature, then to enforce M-of-N, the commit hook script just needs to append
+the M-of-N CCL script from the MAINTAINERS file to the end of the CCL multi-sig
+in the commit and then execute.
+
+The first half will be the CCL multi-sig from the commit and it will leave the
+stack with public keys for all of the valid signatures. Then the second half
+will be the M-of-N check script that checks each public key against the list of
+public keys from the MAINTAINERS file and adds up the number of matches and
+compares that for >= against the M threshold. If, at the end, the stack has
+`TRUE` left then the commit passes the M-of-N multi-sig of maintainers check.
+If the stack is left with `FALSE` it does not pass the check and the commit
+should be rejected.
+
+If a code repo requires that all commits be signed by an identity already
+stored in the repo itself and all of the commit hooks enforce the cryptographic
+checks using CCL, and if all of the cryptographic check CCL scripts are also
+stored in files in the repo, then the entire process is self-certifying and
+guaranteed to be correct.
+
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-The crypto construction language (CCL) is used to serialize all cryptographic
+The crypto constructs language (CCL) is used to serialize all cryptographic
 constructs and uses operations that map directly to the cryptographic
 algorithms and operations that Ursa offers. Ursa abstracts away multiple
 implementations of different algorithms (e.g. SHA256, RSA encryption, etc). At
@@ -106,12 +140,12 @@ like Base64 or Base58. So in a text format, a Base64 encoded public key in CCL
 form would look like this:
 
 ```
-Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo= BASE64 DECODE
+Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo= Base64 DECODE
 ```
 
 The first token is the Base64 encoded public key data followed by the
-identifier for the encoding scheme (e.g. "BASE64") and lastly an opcode
-executing the decode operation. Sincel CCL is processed using a stack machine
+identifier for the encoding scheme (e.g. "Base64") and lastly an opcode
+executing the decode operation. Since CCL is processed using a stack machine
 this is an RPN representation of the operation to decode the key into bytes.
 
 To execute this, the tokens are processed left-to-right. First the encoded key
@@ -193,49 +227,49 @@ encryption algorithm used was Ed25519, then the CCL digital signature would
 look like the following:
 
 ```
-418391ff353d77113568a05ac5cdc2d03278811c99b6531f3cbb7e08625c63bdecbf969b28a2b1af54aa84ebe79bc4d8efce151c4f24647083f11773165d6d04 HEX DECODE 1425ffb6c0cba6e6c23ca29f22bc3881cf924241dc683d7bb3b188ea2ff38966 HEX DECODE da839060538e293c20756d9059ab71db HEX DECODE ED25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH =
+418391ff353d77113568a05ac5cdc2d03278811c99b6531f3cbb7e08625c63bdecbf969b28a2b1af54aa84ebe79bc4d8efce151c4f24647083f11773165d6d04 Hex DECODE 1425ffb6c0cba6e6c23ca29f22bc3881cf924241dc683d7bb3b188ea2ff38966 Hex DECODE da839060538e293c20756d9059ab71db Hex DECODE Ed25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH =
 ```
 
 The execution goes like this:
 
-1) The digital signature hexidecimal is pushed followed by the HEX encoding
+1) The digital signature hexidecimal is pushed followed by the `Hex` encoding
    identifier and the opcode to decode the text to binary. The result is the
    digital signature binary data on the top of the stack.
 2) Next the public key of the signer is decoded.
 3) Then the nonce used in the encryption is also decoded leaving the stack with
    the binary signature with the binary public key and then the binary nonce.
-4) Next the ED25519 identifier and the DECRYPT opcode pops the signature, key
-   and nonce from the stack, decrypts the signature and pushes the resulting
-   binary onto the stack.
-5) Then the name of the file---`foo.txt`---is pushed and the OPEN opcode pops the
-   name, opens the file, and pushes the stream handle onto the stack.
-6) Next the starting index of the read---`0`---followed by the number of bytes to
-   read---`$`---are pushed onto the stack. The `$` symbol means "end of stream"
-   which will cause the READ opcode to read all of the bytes from the file and
-   push them onto the stack followed by the stream handle.
+4) Next the `Ed25519` identifier and the `DECRYPT` opcode pops the signature,
+   key and nonce from the stack, decrypts the signature and pushes the
+   resulting binary onto the stack.
+5) Then the name of the file---`foo.txt`---is pushed and the OPEN opcode pops
+   the name, opens the file, and pushes the stream handle onto the stack.
+6) Next the starting index of the read---`0`---followed by the number of bytes
+   to read---`$`---are pushed onto the stack. The `$` symbol means "end of
+   stream" which will cause the READ opcode to read all of the bytes from the
+   file and push them onto the stack followed by the stream handle.
 7) Then the file stream is closed which closes the file and pops the stream
    handle from the stack leaving the bytes from the file on top.
-8) Next the SHA256 identifier and the HASH opcode pops the file data, hashes it
-   and pushes the hash on the stack. At this point the stack only has the
-   hash that was decrypted in steps 1--4 and the hash that was just calculated
-   from the file data.
+8) Next the `SHA256` identifier and the `HASH` opcode pops the file data,
+   hashes it and pushes the hash on the stack. At this point the stack only has
+   the hash that was decrypted in steps 1--4 and the hash that was just
+   calculated from the file data.
 9) Lastly the `=` opcode pops the top two items from the stack, compares them,
-   and pushes the TRUE constant onto the stack if the two items are equal and
-   pushes the FALSE constant onto the stack if they aren't. This operation
+   and pushes the `TRUE` constant onto the stack if the two items are equal and
+   pushes the `FALSE` constant onto the stack if they aren't. This operation
    compares the two hashes and leaves TRUE on the stack if they match.
 
 So by executing the CCL digital signature script, we validate the digital
-signature. It is important to point out that the parameter for the OPEN
+signature. It is important to point out that the parameter for the `OPEN`
 opcode---`foo.txt` in this case---is entirely application specific. This is a
 digital signature over a file in a filesystem and therefore uses a relative
 path to reference the file and it is assumed that the signature is stored in
 a separate file in the same directory. If this signature was stored at the end
-of the `foo.txt` file, then the READ opcode would not use `$` but would instead
-specify the number of bytes to read up to, but not including the digital
-signature itself.
+of the `foo.txt` file, then the `READ` opcode would not use `$` but would
+instead specify the number of bytes to read up to, but not including the
+digital signature itself.
 
 If this was a digital signature over a transaction in a blockchain data store,
-the parameter for the OPEN operation would be the identifier for the
+the parameter for the `OPEN` operation would be the identifier for the
 transaction---either the hash address of the transaction or whatever addressing
 scheme the blockchain uses.
 
@@ -249,10 +283,10 @@ document.
 
 For insance, in Secure Scuttlebutt, digital signatures are stored as:
 `"signature": "<base64>.sig.ed25519"`. The specification says to parse the
-JSON, remove the signature field, then canoncialize the JSON before hashing.
+JSON, remove the signature field, then canonicalize the JSON before hashing.
 With CCL, if the signature data starts at offest 152 and is 100 bytes long,
-then the CCL version of the signature would have two READ operations followed
-by a MERGE like so:
+then the CCL version of the signature would have two `READ` operations followed
+by a `MERGE` like so:
 
 ```
 0 152 READ 251 $ READ MERGE
@@ -260,7 +294,7 @@ by a MERGE like so:
 
 This would leave the stack with the JSON bytes before and after the signature
 line on the stack ready to be parsed, canonicalized, and then hashed. If the
-JSON is assumed to already be canoncicalized, then the hash can be directly
+JSON is assumed to already be canonicalized, then the hash can be directly
 calculated.
 
 ### Multi-Sig Signatures
@@ -293,44 +327,45 @@ has emerged mostly because all obvious solutions are ugly hacks and so far the
 need is low.
 
 With CCL, both kids of multi-sig signatures are trivial. By using an
-`IF-ELSE-THEN` opcode trio it is easy to append digital signatures to form
+`IF-ELSE-FI` opcode trio it is easy to append digital signatures to form
 a multi-sig signature. For instance, let's start with a basic digital
 signature that looks like the following:
 
 ```
-<sig hex> HEX DECODE <pub key hex> HEX DECODE <nonce hex> HEX DECODE ED25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH =
+<sig hex> Hex DECODE <pub key hex> Hex DECODE <nonce hex> Hex DECODE Ed25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH =
 ```
 
 Let's say another signer wants to add a parallel signature to the one above.
-They would calculate their own signature and append it using `IF-ELSE-THEN` to
+They would calculate their own signature and append it using `IF-ELSE-FI` to
 create a CCL script that validates both signatures over the data:
 
 ```
-<first sig hex> HEX DECODE <first pub key hex> HEX DECODE <first nonce hex> HEX DECODE ED25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH = IF <second sig hex> HEX DECODE <second pub key hex> HEX DECODE <second nonce hex> HEX DECODE ED25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH = ELSE FALSE THEN 
+<first sig hex> Hex DECODE <first pub key hex> Hex DECODE <first nonce hex> Hex DECODE ED25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH = IF <second sig hex> Hex DECODE <second pub key hex> Hex DECODE <second nonce hex> Hex DECODE Ed25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH = ELSE FALSE FI 
 ```
 
 This is a parallel multi-sig. The first part is a normal CCL digital signature
-valudidation. After the `=` opcode, the stack will either have a TRUE on top if
-the signature is valid or a FALSE on top if it is not. The IF opcode pops the
-top and if it is TRUE, the script between IF and ELSE is executed, otherwise
-the script between ELSE and THEN is executed. Between the IF and ELSE is a
-second digital signature validation script that will leave TRUE on top if it
-is valid. So if both signatures are valid, the script will end with TRUE on top
-of the stack. If the first signature is invalid, then the code between ELSE and
-THEN will get executed. That script just pushes FALSE onto the stack to
-indicate that the signature checks failed. Any number of parallel signatures
-can be appended to the digital signature independently. This allows for
-asynchronous multi-sig operations where one person signs some data and then
-forwards the data and their signature to the next person who then appends their
-signature and so on until all signatures are created and appended.
+validation. After the `=` opcode, the stack will either have a `TRUE` on top if
+the signature is valid or a `FALSE` on top if it is not. The `IF` opcode pops
+the top and if it is `TRUE`, the script between `IF` and `ELSE` is executed,
+otherwise the script between `ELSE` and `FI` is executed. Between the `IF` and
+`ELSE` is a second digital signature validation script that will leave `TRUE`
+on top if it is valid. So if both signatures are valid, the script will end
+with `TRUE` on top of the stack. If the first signature is invalid, then the
+code between `ELSE` and `FI` will get executed. That script just pushes `FALSE`
+onto the stack to indicate that the signature checks failed. Any number of
+parallel signatures can be appended to the digital signature independently.
+This allows for asynchronous multi-sig operations where one person signs some
+data and then forwards the data and their signature to the next person who then
+appends their signature and so on until all signatures are created and
+appended.
 
 For serial multi-sig, the subsequent signature must include not only the data
 but the previous signatures. To accomplish this, the CCL script of the
 endosring signature must be set up with reads of the data and reads of the
 previous signature data before calculating the hash to compare.
 
-Any number of digital signatures can be generated and appeneded to the existing
-signature using the IF-ELSE-THEN pattern. It is also possible to mix both
+Any number of digital signatures can be generated and appended to the existing
+signature using the `IF-ELSE-FI` pattern. It is also possible to mix both
 parallel and serial digital signatures in any arbitrary arrangement. Let's say
 a commit comes in that is signed off by two authors that collaborated. That
 commit has two parallel signatures, one from each author. Then the maintainer
@@ -371,8 +406,8 @@ The stack diagram follow the command---in this case `=`---and consists of a
 right parenthesis `(` followed by the parameters poped off of the stack
 with `--` separator followed by the return parameters pushed onto the stack. In
 the case of the `=` opcode, it pops two parameters of any type---a1 and a2---
-and compares them for equality and pushes either TRUE if they are equal or
-FALSE if they are not.
+and compares them for equality and pushes either `TRUE` if they are equal or
+`FALSE` if they are not.
 
 Another example would be the DECODE opcode:
 
@@ -421,8 +456,9 @@ The `>` operator pops two numerical arguments off of the stack and compares
 them to see if the first argument popped is greater than the second argument
 popped. It pushes TRUE if that is true, FALSE if not.
 
-There are also the `<=` and `>=` opcodes that test for less-than-or-equal and
-greater-than-or-equal.
+There are also the `<=`, `>=`, and `!=` opcodes that are combinations of the
+above logical comparisons. They test for less-than-or-equal, greater-than-or-
+equal, and not-equal respectively.
 
 ### Binary-to-text Operations
 
@@ -544,6 +580,69 @@ CLOSE ( h -- )
 The `CLOSE` opcode closes the opened data storage object. It pops the handle
 from the stack and does not push anything to the stack.
 
+### Data Maniupulation
+
+```
+/ b -- binary data.
+JOIN ( b b -- b )
+```
+
+The `JOIN` opcode pops two binary data arguments from the stack and
+concatenates the top argument to the end of the argument below it on the stack
+and pushes the resulting binary data back onto the stack.
+
+```
+/ b -- binary data.
+/ o -- integer offset.
+/ c -- integer count.
+SLICE ( b o c -- b )
+```
+
+The `SLICE` opcode pops the count, offset, and binary data from the stack and
+creates a new binary data argument starting at the offset and taking the count
+number of bytes from the original binary data argument. The result is pushed
+onto the stack. The offset is zero-indexed and both the offset and count are in
+bytes.
+
+```
+data: abcdef0123456789
+         ^ 3 offset ^ 12 count
+
+result: def012345678
+```
+
+```
+/ b -- binary data.
+| ( b b -- b )
+```
+
+The `|` opcode is the bitwise _or_ between the top two binary data arguments.
+The result is pushed onto the stack.
+
+```
+/ b -- binary data.
+& ( b b -- b )
+```
+
+The `&` opcode is the bitwise _and_ between the top two binary data arguments.
+The result is pushed onto the stack.
+
+```
+/ b -- binary data.
+^ ( b b -- b )
+```
+
+The `^` opcode is the bitwise _xor_ between the top two binary data arguments.
+The result is pushed onto the stack.
+
+```
+/ b -- binary data.
+~ ( b -- b )
+```
+
+The `~` opcode is the bitwise inverse of the top binary data argument. The
+result is pushed onto the stack.
+
 ### Stack Control
 
 ```
@@ -566,28 +665,32 @@ used for throwing away the top of the stack.
 
 ```
 / b -- boolean argument.
-IF ( b -- ) ELSE THEN
+IF ( b -- ) ELSE FI
 ```
 
-The `IF-ELSE-THEN` opcode trio and the related `IF-THEN` opcode duo are used
+The `IF-ELSE-FI` opcode trio and the related `IF-FI` opcode duo are used
 to do conditional branching in CCL scripts. The `IF` opcode pops the top of the
 stack and evaluates it as a boolean argument.
 
-In the case of `IF-ELSE-THEN` if the argument is true then the script between
-`IF` and `ELSE` is excuted followed by jumpting to the script after the `THEN`.
-If it is a false then the script between the `ELSE` and the `THEN` is executed.
+In the case of `IF-ELSE-FI` if the argument is true then the script between
+`IF` and `ELSE` is excuted followed by jumpting to the script after the `FI`.
+If it is a false then the script between the `ELSE` and the `FI` is executed.
 
-In the case of `IF-THEN` if the argument is true then script between the `IF`
-and `THEN` is executed. If it is false then flow jumps to the script after the
-`THEN` opcode.
+In the case of `IF-FI` if the argument is true then script between the `IF`
+and `FI` is executed. If it is false then flow jumps to the script after the
+`FI` opcode.
 
 ## Encoding Formats
 
 The first version of CCL supports the following encoding types:
 
-* Hexidecimal
-* Base64 and Base64Url
-* Base58
+* Hexidecimal -- binary represented as lower case hexidecimal characters.
+* Base64 -- 62nd and 63rd characters are `+` and `/` respectively. No line
+  length maximum; all data in one line with mandatory padding using `=`.
+* Base64Url -- 62nd and 63rd characters are `-` and `_` respectively. No line
+  length maximum; all data in one line with no padding.
+* Base58 -- See definition [here](https://en.wikipedia.org/wiki/Base58).
+* Base58Check -- This is a complex construct and implemented using CCL itself.
 
 ## Encryption Algorithms
 
@@ -622,7 +725,7 @@ for JSON.
 The first job of mapping abstract CCL to JSON is to decide the string constants
 to use for the supported encoding types, encryption algorithms, hashing
 algorithms, and opcodes. Below are lists of constants in CCL and their string
-constant equivilents in JSON.
+constant equivalents in JSON.
 
 #### Encoding Constants
 
@@ -656,6 +759,10 @@ constant equivilents in JSON.
 * <= - `<=`
 * >= - `>=`
 * != - `!=`
+* | - `|`
+* & - `&`
+* ^ - `^`
+* ~ - `~`
 * DECODE - `DECODE`
 * ENCODE - `ENCODE`
 * DECRYPT - `DECRYPT`
@@ -666,11 +773,13 @@ constant equivilents in JSON.
 * WRITE - `WRITE`
 * SEEK - `SEEK`
 * CLOSE - `CLOSE`
+* JOIN - `JOIN`
+* SLICE - `SLICE`
 * DUP - `DUP`
 * POP - `POP`
 * IF - `IF`
 * ELSE - `ELSE`
-* THEN - `THEN`
+* FI - `FI`
 
 #### Encoding
 
@@ -691,7 +800,7 @@ The only drawback is that the resulting cryptographic constructs are not
 compact. They can be strings that are very long and it may be difficult for a
 person not experienced in RPN to follow what is being happening. The
 compactness of other cryptographic construct representations is a result of
-fixing details of the construction in specifications that are not easy to
+fixing details of the constructs in specifications that are not easy to
 update and are not transported with the data itself. This makes all other
 formats non-self-describing. It makes it hard for new systems to know exactly
 what they must do to make use of any specific cryptographic construct.
@@ -728,7 +837,7 @@ achieving the same thing as Bitcoin script. In fact, CCL could be used to
 implement all of the features in Bitcoin script but in a little more verbose
 way. Bitcoin script opcodes like OP_CHECKLOCKTIMEVERIFY could be implemented
 using a sequence of CCL opcodes that read the nLockTime from the Bitcoin
-transaction and uses `IF-ELES-THEN` to do the same things that
+transaction and uses `IF-ELSE-FI` to do the same things that
 OP_CHECKLOCKTIMEVERIFY does.
 
 In the end, the benefits of a self-describing system like Bitcoin script makes
@@ -742,13 +851,17 @@ a good general solution so CCL has been created to fill that gap.
 * Should we focus on making sure CCL is non-Turing-complete? These are
   essentially small "smart contracts" and therefore they are safety critical.
   Non-Turing-completeness would allow for the creation of static analysis tools
-  and determistic evaluation looking for undesirable corner case possibilities.
+  and deterministic evaluation looking for undesirable corner case possibilities.
 * Should CCL include a macro-definition system where common sequences of CCL
   opcodes can be aliased with a macro name that is used in the serialized
   versions? This would require a macro setup script that would be implied to
   run before any CCL scripts are executed to ensure that all macro definitions
   are processed and initialized before the scripts that use those macros are
-  executed.
+  executed. A good example of where this would be useful is decoding
+  Base58Check Bitcoin addresses. The encoding and decoding of a Base58Check
+  address requires concatenation, byte masking, and multiple SHA256 hashes for
+  the checksum piece. Having a macro called Base58CheckDecode would make CCL
+  scripts more readable.
 * Some crypto libraries like NaCl hide a lot of the "sub-operations" used in
   their more complicated constructs like the sealed box. This is done on
   purpose to make the library misuse resistant and hides a lot of inner
