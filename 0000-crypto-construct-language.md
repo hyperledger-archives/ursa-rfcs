@@ -188,24 +188,25 @@ encoded in JSON-LD and look like this:
 
 Notice how the type is a complex identifier that implies a hash function and
 encryption function and relies on external documentation to specify exactly how
-an `Ed25519Signature2018` is constructed so that implementors will know to
-verify this signature. Linked data signatures are largely self describing but
-the steps required to verify the signature are left up to the implementor and
-assumed to be widely known. The linked data signature specification fails to
-describe exactly the steps to take to verify the signature and presents a
+an `Ed25519Signature2018` is constructed. Implementors will have to read this
+external documentation before they will know how to process each field to
+verify this signature. Linked data signatures are only lightly self-describing.
+The steps required to verify the signature are left up to the implementor
+and assumed to be widely known. The linked data signature specification fails
+to describe exactly the steps to take to verify the signature and presents a
 problem for implementers new to cryptography.
 
 In Secure Scuttlebutt, for some reason they forego the sigil character that
-they use for everything else and instead signal that it is a signature by
-adding a ".sig" string as part of the suffix string. The hash algorithm used is
+they use for everything else and instead signal that something is a signature
+by adding a ".sig" string as part of the suffix. The hash algorithm used is
 specified in the Secure Scuttlebutt protocol guide and is not encoded in the
-signature itself. This will limit the ability for Secure Scuttlebutt to adopt
-new signature schemes without massive disruption caused by breaking changes and
+signature itself. This limits the ability for Secure Scuttlebutt to adopt new
+signature schemes without massive disruption caused by breaking changes and
 incompatible implementations. The binary-to-text encoding scheme is also
-specified in the protocol specification as non-URL-safe Base64. This also will
-limit opportunity for future changes to the protocol. They do encode the public
-key encryption algorithm used in the suffix string. A Secure Scuttlebutt
-signature looks like the following:
+specified in the protocol specification as non-URL-safe Base64. Again, this
+limits the opportunity for future revisions to the protocol. The only part that
+is self-describing is the encryption algorithm identifier in the suffix. A
+Secure Scuttlebutt signature looks like the following:
 
 ```
 QYOR/zU9dxE1aKBaxc3C0DJ4gRyZtlMfPLt+CGJcY73sv5abKKKxr1SqhOvnm8TY784VHE8kZHCD8RdzFl1tBA==.sig.ed25519
@@ -216,21 +217,23 @@ external specification to store the procedure for verifying the digital
 signature. CCL digital signatures are scripts that, when executed, verify the
 digital signature. The primary challenge with CCL digital signatures is the
 reference to the external data that was hashed when calculating the signature.
-CCL uses an "open-read-close" sequence along with application specific
-identifiers to specify what data storage unit (e.g. file, stream, object),
-and which bytes to read from the data storage unit for the hash calculation.
+CCL uses an "open-read-close" sequence along with application-specific
+identifiers to specify what data storage unit to open (e.g. file, stream,
+object), and which bytes to read from the data storage unit for the hash
+calculation.
 
-If we assume that this is a digital signature for a text file named `foo.txt`
-and the entire file was signed and that the binary-to-text encoding scheme used
-is hexidecimal and the hash algorithm used was SHA256 and the public key
-encryption algorithm used was Ed25519, then the CCL digital signature would
-look like the following:
+If we assume that the following is a digital signature for a text file named
+`foo.txt` and the entire file was signed and that the binary-to-text encoding
+scheme used is hexidecimal and the hash algorithm used was SHA256 and the
+public key encryption algorithm used was Ed25519, then the CCL digital
+signature would look like the following:
 
 ```
 418391ff353d77113568a05ac5cdc2d03278811c99b6531f3cbb7e08625c63bdecbf969b28a2b1af54aa84ebe79bc4d8efce151c4f24647083f11773165d6d04 Hex DECODE 1425ffb6c0cba6e6c23ca29f22bc3881cf924241dc683d7bb3b188ea2ff38966 Hex DECODE da839060538e293c20756d9059ab71db Hex DECODE Ed25519 DECRYPT foo.txt OPEN 0 $ READ CLOSE SHA256 HASH =
 ```
 
-The execution goes like this:
+To understand and verify this digital signature it needs to be executed like
+so:
 
 1) The digital signature hexidecimal is pushed followed by the `Hex` encoding
    identifier and the opcode to decode the text to binary. The result is the
@@ -258,15 +261,17 @@ The execution goes like this:
    pushes the `FALSE` constant onto the stack if they aren't. This operation
    compares the two hashes and leaves TRUE on the stack if they match.
 
-So by executing the CCL digital signature script, we validate the digital
-signature. It is important to point out that the parameter for the `OPEN`
-opcode---`foo.txt` in this case---is entirely application specific. This is a
-digital signature over a file in a filesystem and therefore uses a relative
-path to reference the file and it is assumed that the signature is stored in
-a separate file in the same directory. If this signature was stored at the end
-of the `foo.txt` file, then the `READ` opcode would not use `$` but would
-instead specify the number of bytes to read up to, but not including the
-digital signature itself.
+By executing the CCL digital signature script, we validate the digital
+signature by first decrypting the hash using the included public key and then
+by recreating the hash from the source data and comparing the two. It is
+important to point out that the parameter for the `OPEN` opcode---`foo.txt` in
+this case---is entirely application specific. This is a digital signature over
+a file in a filesystem and therefore uses a relative path to reference the file.
+It is also assumed that the signature is stored in a separate file in the same
+directory as what is called a "detached signature". If this signature was
+stored as part of the `foo.txt` file, then the `READ` opcode would not use
+`$` but would instead specify the number of bytes to read up to, but not
+including the digital signature itself.
 
 If this was a digital signature over a transaction in a blockchain data store,
 the parameter for the `OPEN` operation would be the identifier for the
