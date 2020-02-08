@@ -510,6 +510,7 @@ algorithm identifier. The result is the decrypted binary data.
 / o.. -- optional binary parameters.
 / i -- encryption algorithm identifier.
 / e -- encrypted binary data.
+```
 
 The `ENCRYPT` opcode is used to take binary and encrypt it using the specified
 encryption algorithm and key and algorithm-specific parameters. The result is
