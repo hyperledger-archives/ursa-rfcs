@@ -115,11 +115,11 @@ proposed DID document specification a public key is serialized in JSON format
 with the encoding type in the key:
 
 ```
-{ "type": "Ed25519", "hexkey": "0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a", }
+{ "type": "Ed25519", "hexkey": "0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a" }
 ```
 
 Secure Scuttlebutt does something different. They use a sigil character to
-identify a public key---"@"---and then add a suffix to define the algorithm the
+identify a public key---`@`---and then add a suffix to define the algorithm the
 key is intended to be used with:
 
 ```
@@ -769,8 +769,8 @@ their string constant equivalents in JSON.
 
 #### Signing Algorithms
 
-* Ed25519 - 'Ed25519'
-* ECDSA - 'ECDSA'
+* Ed25519 - `Ed25519`
+* ECDSA - `ECDSA`
 
 #### Hashing Algorithms
 
@@ -906,8 +906,8 @@ a good general solution so CCLang has been created to fill that gap.
 
 # References
 
-* [0]: http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/
-* [1]: https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md
+* 0: [http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/](http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/)
+* 1: [https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md](https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md)
 
 # Changelog
 [changelog]: #changelog
