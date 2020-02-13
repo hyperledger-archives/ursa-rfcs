@@ -871,9 +871,9 @@ transaction and uses `IF-ELSE-FI` to do the same things that
 OP_CHECKLOCKTIMEVERIFY does.
 
 There is some other prior art documented in Chrisopher Allen's post on smarter
-signatures [^0]. In that blog post he discusses functional programming inspired
+signatures [0]. In that blog post he discusses functional programming inspired
 solutions like Forth-based scripts such a Bitcoin script. He also references
-Peter Todd's Dex script that uses Lisp-like s-expression syntax [^1]. 
+Peter Todd's Dex script that uses Lisp-like s-expression syntax [1]. 
 
 In the end, the benefits of a self-describing system like Bitcoin script makes
 this better than the "specification assisted" systems used by Git and Secure
@@ -906,8 +906,8 @@ a good general solution so CCLang has been created to fill that gap.
 
 # References
 
-[^0]: [http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/](http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/)
-[^1]: [https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md](https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md)
+* [0]: [http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/](http://www.lifewithalacrity.com/2016/10/smarter-signatures-experiments-in-verifications/)
+* [1]: [https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md](https://github.com/WebOfTrustInfo/rwot2-id2020/blob/master/topics-and-advance-readings/DexPredicatesForSmarterSigs.md)
 
 # Changelog
 [changelog]: #changelog
