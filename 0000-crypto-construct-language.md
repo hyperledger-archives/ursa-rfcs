@@ -114,14 +114,17 @@ The most basic of cryptographic constructs is storing a public key. In the
 proposed DID document specification a public key is serialized in JSON format
 with the encoding type in the key:
 
-``` { "type": "Ed25519", "hexkey":
-"0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a", } ```
+```
+{ "type": "Ed25519", "hexkey": "0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a", }
+```
 
 Secure Scuttlebutt does something different. They use a sigil character to
 identify a public key---"@"---and then add a suffix to define the algorithm the
 key is intended to be used with:
 
-``` @Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo=.ed25519 ```
+```
+@Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo=.ed25519
+```
 
 In CCLang, a public key alone doesn't need any decoration. It is just stored as
 the key data. The serialization changes however if the key must be encoded for
@@ -130,7 +133,9 @@ encoded using hexidecimal characters or a binary-to-text translation scheme
 like Base64 or Base58. So in a text format, a Base64 encoded public key in
 CCLang form would look like this:
 
-``` Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo= Base64 DECODE ```
+```
+Cn0deENYrx+Ac7oH61ri/HJyqGDsRUfei8E9BCWc1Zo= Base64 DECODE
+```
 
 The first token is the Base64 encoded public key data followed by the
 identifier for the encoding scheme (e.g. "Base64") and lastly an opcode
@@ -160,11 +165,20 @@ In Verifiable Credentials, they store something called a "Linked Data
 Signature" that contains the digital signature of the credential. They are
 encoded in JSON-LD and look like this:
 
-``` { "@context": "https://www.w3.org/2018/credentials/examples/v1", "title":
-"Hello World!", "proof": { "type": "Ed25519Signature2018", "proofPurpose":
-"assertionMethod", "created": "2019-08-23T20:21:34Z", "verificationMethod":
-"did:example:123456#key1", "domain": "example.org", "jws":
-"eyJ0eXAiOiJK...gFWFOEjXk" } } ```
+```
+{
+  "@context": "https://www.w3.org/2018/credentials/examples/v1",
+  "title": "Hello World!",
+  "proof": {
+    "type": "Ed25519Signature2018",
+    "proofPurpose": "assertionMethod",
+    "created": "2019-08-23T20:21:34Z",
+    "verificationMethod": "did:example:123456#key1",
+    "domain": "example.org",
+    "jws": "eyJ0eXAiOiJK...gFWFOEjXk"
+  }
+}
+```
 
 Notice how the type is a complex identifier that implies a hash function and
 encryption function and relies on external documentation to specify exactly how
@@ -211,27 +225,30 @@ signature would look like the following:
 ```
 418391ff353d77113568a05ac5cdc2d03278811c99b6531f3cbb7e08625c63bdecbf969b28a2b1af54aa84ebe79bc4d8efce151c4f24647083f11773165d6d04
 Hex DECODE 1425ffb6c0cba6e6c23ca29f22bc3881cf924241dc683d7bb3b188ea2ff38966 Hex
-DECODE foo.txt OPEN 0 $ READ CLOSE Ed25519 VERIFY ```
+DECODE foo.txt OPEN 0 $ READ CLOSE Ed25519 VERIFY
+```
 
 To understand and verify this digital signature it needs to be executed like
 so:
 
 1) The digital signature hexidecimal is pushed followed by the `Hex` encoding
-identifier and the opcode to decode the text to binary. The result is the
-digital signature binary data on the top of the stack.  2) Next the public key
-of the signer is decoded from hex and also left on the stack.  3) Then the name
-of the file---`foo.txt`---is pushed and the OPEN opcode pops the name, opens
-the file, and pushes the stream handle onto the stack.  4) Next the starting
-index of the read---`0`---followed by the number of bytes to read---`$`---are
-pushed onto the stack. The `$` symbol means "end of stream" which will cause
-the READ opcode to read all of the bytes from the file and push them onto the
-stack followed by the stream handle.  5) Then the file stream is closed which
-closes the file and pops the stream handle from the stack leaving the bytes
-from the file on top.  6) The last step is to push the signature algorithm
-identifier 'Ed25519' onto the stack and then execute the 'VERIFY' opcode to
-verify the signature from the signature data, the public key, and the data that
-was signed. The 'VERIFY' opcode results in 'TRUE' or 'FALSE' being pushed onto
-the stack whether the signature is valid or not.
+   identifier and the opcode to decode the text to binary. The result is the
+   digital signature binary data on the top of the stack.
+2) Next the public key of the signer is decoded from hex and also left on the
+   stack.
+3) Then the name of the file---`foo.txt`---is pushed and the OPEN opcode pops
+   the name, opens the file, and pushes the stream handle onto the stack.
+4) Next the starting index of the read---`0`---followed by the number of bytes
+   to read---`$`---are pushed onto the stack. The `$` symbol means "end of
+   stream" which will cause the READ opcode to read all of the bytes from the
+   file and push them onto the stack followed by the stream handle.
+5) Then the file stream is closed which closes the file and pops the stream
+   handle from the stack leaving the bytes from the file on top.
+6) The last step is to push the signature algorithm identifier 'Ed25519' onto
+   the stack and then execute the 'VERIFY' opcode to verify the signature from
+   the signature data, the public key, and the data that was signed. The
+   'VERIFY' opcode results in 'TRUE' or 'FALSE' being pushed onto the stack
+   whether the signature is valid or not.
 
 By executing the CCLang digital signature script, we validate the digital
 signature by putting the signature, public key and signed data onto the stack
@@ -264,7 +281,9 @@ With CCLang, if the signature data starts at offest 152 and is 100 bytes long,
 then the CCLang version of the signature would have two `READ` operations
 followed by a `CONCAT` like so:
 
-``` 0 152 READ 251 $ READ CONCAT ```
+```
+0 152 READ 251 $ READ CONCAT
+```
 
 This would leave the stack with the JSON bytes before and after the signature
 line on the stack ready to be parsed, canonicalized, and then hashed. If the
@@ -305,16 +324,17 @@ With CCLang, both kids of multi-sig signatures are trivial. By using an
 multi-sig signature. For instance, let's start with a basic digital signature
 that looks like the following:
 
-``` <sig hex> Hex DECODE <pub key hex> Hex DECODE foo.txt OPEN 0 $ READ CLOSE
-Ed25519 VERIFY ```
+```
+<sig hex> Hex DECODE <pub key hex> Hex DECODE foo.txt OPEN 0 $ READ CLOSE Ed25519 VERIFY
+```
 
 Let's say another signer wants to add a parallel signature to the one above.
 They would calculate their own signature and append it using `IF-ELSE-FI` to
 create a CCLang script that validates both signatures over the data:
 
-``` <first sig hex> Hex DECODE <first pub key hex> Hex DECODE OPEN 0 $ READ
-CLOSE ED25519 VERifY IF <second sig hex> Hex DECODE <second pub key hex> Hex
-DECODE foo.txt OPEN 0 $ READ CLOSE Ed25519 VERIFY ELSE FALSE FI ```
+```
+<first sig hex> Hex DECODE <first pub key hex> Hex DECODE OPEN 0 $ READ CLOSE ED25519 VERifY IF <second sig hex> Hex DECODE <second pub key hex> Hex DECODE foo.txt OPEN 0 $ READ CLOSE Ed25519 VERIFY ELSE FALSE FI
+```
 
 This is a parallel multi-sig. The first part is a normal CCLang digital
 signature validation. After the `VERIFY` opcode, the stack will either have a
@@ -345,8 +365,7 @@ commit has two parallel signatures, one from each author. Then the maintainer
 of the project merges it with their serial signature that covers both the
 commit and the two signatures from the authors.
 
-# Reference-level explanation [reference-level-explanation]:
-#reference-level-explanation
+# Reference-level explanation [reference-level-explanation]: #reference-level-explanation
 
 ## The Stack
 
@@ -698,12 +717,17 @@ The first version of CCLang supports the following encoding types:
 
 The first version of CCLang supports the following encryption algorithms:
 
-* Ed25519
 * Curve25519
 * RSA
-* El Gamal
-* Chacha20
+* XSalsa20Poly1305
 * AES
+
+## Signing Algorithms
+
+The first version of CCLang supports the following signing algorithms:
+
+* Ed255519
+* ECDSA
 
 ## Hashing Algorithms
 
@@ -795,8 +819,7 @@ public string would be encoded as:
 
 ```
 {
-  "key": [ "0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a",
-           "Hex", "DECODE" ]
+  "key": [ "0a7d1d784358af1f8073ba07eb5ae2fc7272a860ec4547de8bc13d04259cd59a", "Hex", "DECODE" ]
 }
 ```
 
@@ -891,3 +914,4 @@ a good general solution so CCLang has been created to fill that gap.
 
 - [31 Jan 2020] - v1 - initial draft.
 - [12 Feb 2020] - v2 - reworking signinging.
+- [13 Feb 2020] - v3 - cleanup of formatting.
