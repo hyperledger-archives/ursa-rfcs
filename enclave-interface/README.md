@@ -102,11 +102,111 @@ The following constraints are suggested:
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
+Before any cryptographic operations can occur, programmers must have a connection to the enclave. Enclave connections
+come in one of the following forms:
 
+1. Software Development Kits (SDK) or provider libraries. (SGX, PSP, Trustzone, Mac OS X Keychain)
+1. Physical connections (USB)
+1. Networked (HTTP, ethernet, bluetooth)
+
+Therefore initial piece of the interface is the connection. Given each provider has different connection methods, 
+the connection create process takes a configuration unique to that enclave.
+
+We show all code samples written as Rust but can be adapted to other languages as desired.
+
+Most hardware implementations will not allow key material to be passed through the API, even in encrypted form, so a system of external references is required that allows keys to be referenced in a way that supports:
+1. **Consistency** - The same ID refers to the same key every time (according to the key management paradigm of the underlying hardware)
+1. **Naming schemes** - Organizations often name their keys according to some formal naming scheme - such as **legal.europe.documetencryption.May2019-1**.
+1. **Key blocks** - Some HSMs not only allow but actively require keys to be passed as formatted and encrypted keyblocks.  In this case we not only need to support the simple data type of a binary key block but also (potentially) identify which KEK it's encrypted under.
+
+In keeping with the drive for Ursa to be simple and hard to mess up, the proposal is to make KeyIDs in the Ursa interface be simple UTF-8 string names, and leave the underlying provider implementation to deal with the complexities of translation, key rollover, duplication and so on.  Keyblocks will not be supported until really demanded.
+
+The generic trait that all provides the specific APIs is the trait `EnclaveLike`.
+```rust
+pub trait EnclaveLike {
+    fn connect(connector: EnclaveConnector) -> Result<Self, Error>;
+    fn close(self);
+    fn capabilities(&self) -> Result<Vec<EnclaveCapabilities>, Error>;
+    fn create_key(&self, options: EnclaveCreateKeyOptions) -> Result<EnclaveMessage, Error>;
+    fn delete_key(&self, key_id: String) -> Result<EnclaveMessage, Error>;
+    fn execute(&self, message: EnclaveOperation) -> Result<EnclaveMessage, Error>;
+    fn export_wrapped(&self, wrap_key_id: String, key_id: String) -> Result<EnclaveMessage, Error>;
+    fn get_key_info(&self, key_id: String) -> Result<EnclaveMessage, Error>;
+    fn get_public_key(&self, key_id: String) -> Result<EnclaveMessage, Error>;
+    fn get_random(&self, bytes: usize) -> Result<EnclaveMessage, Error>;
+    fn import_wrapped(&self, wrap_key_id: String, wrap_message: EnclaveImportRequest) -> Result<EnclaveMessage, Error>;
+    fn list_keys(&self) -> Result<EnclaveMessage, Error>;
+    fn ping(&self) -> Result<EnclaveMessage, Error>;
+    fn put_key(&self, message: EnclaveMessage) -> Result<EnclaveMessage, Error>;
+    fn reset(&self) -> Result<EnclaveMessage, Error>;
+    fn send_message(&self, message: InputEnclaveMessage) -> Result<EnclaveMessage, Error>;
+}
+```
+
+Each connection is provided by the `EnclaveConnector` enumeration. The enumeration defines the connection type.
+This list is not exhaustive but is defined enough for the reader to get a general idea of how to add new connection types.
+This is where the specifics about the enclave must be known by the developer.
+```rust
+pub enum EnclaveConnector {
+    OsKeyRing(OsKeyRingConnector),
+    YubiHsm(YubiHsmConnector),
+    SGX(SGXConnector),
+    Trustzone(TrustzoneConnector),
+    AwsKms(AwsKmsConnector)
+}
+```
+
+The `OsKeyRingConnector` contains the options for connecting to the OS Keyring which may be backed by a hardware
+enclave. Each of these fields may be empty which means the OS will use the default keyring and prompt the consumer
+for a username and password. 
+
+```rust
+pub struct OsKeyRingConnector {
+    path: Option<String>,
+    username: Option<String>,
+    password: Options<String>
+}
+```
+
+The `YubiHsm` connector contains the options for connecting to a portable Yubikey which may be networked or connected
+via USB. Other methods might be provided by the [Yubico SDK](https://developers.yubico.com/YubiHSM2/Releases/)
+
+```rust
+pub struct Credentials {
+    authentication_key_id: u16,
+    authentication_key: Key, //derived from PBKDF2 or symmetric key
+}
+
+pub struct UsbConnector {
+    address: u8,
+    bus_number: u8,
+    credentials: Credentials,
+    context: UsbContext,
+    product_name: String,
+    serial_number: u32,
+    timeout_ms: u64,
+}
+
+pub struct HttpConnector {
+    address: String, //IP address or DNS name
+    credentials: Credentials,
+    port: u16,
+    timeout_ms: u64
+}
+
+pub enum YubiHsmConnector {
+    Usb(UsbConnector),
+    Http(HttpConnector)
+}
+```
+
+Once a `EnclaveConnector` has been defined, the connection is created. The connection enables the 
 
 # Drawbacks
 [drawbacks]: #drawbacks
-
+For developers intimately familiar with enclave programming, this API may be a more expensive/complicated scheme than
+using the methods they are already used to using. Care must be taken so this scheme does not change frequency with each
+enclave provider that is to be supported.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
