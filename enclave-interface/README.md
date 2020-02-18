@@ -124,21 +124,43 @@ In keeping with the drive for Ursa to be simple and hard to mess up, the proposa
 The generic trait that all provides the specific APIs is the trait `EnclaveLike`.
 ```rust
 pub trait EnclaveLike {
+    /// Create connection to enclave, returns a session/context useful
+    /// for issuing commands to the enclave
     fn connect(connector: EnclaveConnector) -> Result<Self, Error>;
+    /// Terminate the current session/context
     fn close(self);
+    /// Get a list of capabilities supported by this enclave
     fn capabilities(&self) -> Result<Vec<EnclaveCapabilities>, Error>;
+    /// Create a new enclave key. Settings and key type and supported operations are 
+    /// defined in the `EnclaveCreateKeyOptions`. 
     fn create_key(&self, options: EnclaveCreateKeyOptions) -> Result<EnclaveMessage, Error>;
+    /// Delete an enclave key. This will error if current session is not allowed 
     fn delete_key(&self, key_id: String) -> Result<EnclaveMessage, Error>;
+    /// Perform a cryptographic operation like encryption, signing,
+    /// export wrapped, import wrapped, generate attestation, or other crypto algorithms
+    /// defined in the `EnclaveOperation`.
     fn execute(&self, message: EnclaveOperation) -> Result<EnclaveMessage, Error>;
-    fn export_wrapped(&self, wrap_key_id: String, key_id: String) -> Result<EnclaveMessage, Error>;
+    /// Get information about the specified "key_id". Such information is
+    /// key type (Ed25519, RSA, BLS), operations allowed, created date,
+    /// valid until date, authorized users
     fn get_key_info(&self, key_id: String) -> Result<EnclaveMessage, Error>;
+    /// Return a public key given a private key with "key_id"
     fn get_public_key(&self, key_id: String) -> Result<EnclaveMessage, Error>;
-    fn get_random(&self, bytes: usize) -> Result<EnclaveMessage, Error>;
-    fn import_wrapped(&self, wrap_key_id: String, wrap_message: EnclaveImportRequest) -> Result<EnclaveMessage, Error>;
+    /// Return "bytes" random data bytes generated in the enclave
+    fn get_random(&self, bytes: usize) -> Result<Vec<u8>, Error>;
+    /// Return a list of all key_ids the current session is allowed to use
     fn list_keys(&self) -> Result<EnclaveMessage, Error>;
+    /// Ping the enclave to keep the session/context alive. Returns an error if the session/context is closed
+    /// or otherwise unavailable
     fn ping(&self) -> Result<EnclaveMessage, Error>;
-    fn put_key(&self, message: EnclaveMessage) -> Result<EnclaveMessage, Error>;
+    /// Put a raw key into the enclave. Similar to `create_key` except the key was generated outside the enclave.
+    /// Usually this is used for inserting public or symmetric keys
+    fn put_key(&self, message: PutKeyOptions) -> Result<EnclaveMessage, Error>;
+    /// Reset the enclave to a factory default state, clearing all stored objects and restoring the default auth key is applicable.
+    /// WARNING: This wipes all keys and other data (logs, policies) from the enclave. 
     fn reset(&self) -> Result<EnclaveMessage, Error>;
+    /// Useful for non crypto related queries like get audit logs, get storage capacity, or device info as well as
+    /// creating other credentials, changing permissions and policies.
     fn send_message(&self, message: InputEnclaveMessage) -> Result<EnclaveMessage, Error>;
 }
 ```
