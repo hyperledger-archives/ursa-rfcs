@@ -231,11 +231,11 @@ Enclave providers must be queryable for capabilities which can then be used by t
 to use. Common capabilities with existing enclaves are in the following rust code. These are not mutually exclusive
 ```rust
 pub enum EnclaveOperation {
-    DeriveDiffieHellman(DeriveParams),
+    Attestation(AttestationParams),
     GenerateAsymmetricKey(GenerateAsymmetricParams),
     GenerateSymmetricKey(GenerateSymmetricParams),
     GenerateRandom(RandomParams),
-    Attestation(AttestationParams),
+    KeyAgreement(AgreementParams),
     Sign(SigningParams),
     Verify(VerifyParams),
     Encrypt(EncryptParams),
@@ -251,9 +251,13 @@ pub enum EnclaveOperation {
     DeviceInfo
 }
 
-pub enum DeriveParams {
+/// Key agreement derivation parameters
+pub enum AgreementParams {
+    /// Key agreement using PKCS3
     Pkcs3(Pkcs3Params),
+    /// Key agreement using ECDH
     Ecdh(EcdhParams),
+    /// Key agreement using Post-Quantum algorithms
     Pq(PostQuantumParams)
 }
 
@@ -265,13 +269,23 @@ pub struct Pkcs3Params {
     g: BigNum,
     /// This enclave's key id
     id: String,
+    /// Mask generating function
+    mgf: Pkcs3Mgf,
     /// Other's public key
-    peer: BigNum
+    peer: BigNum,
 }
 
 /// Pkcs3 diffie hellman prime
 pub struct Pkcs3DhP {
     value: BigNum
+}
+
+/// Valid mask generating functions for Pkcs3
+pub enum Pkcs3Mgf {
+    Sha224,
+    Sha256,
+    Sha384,
+    Sha512
 }
 
 /// Elliptic Curve Diffie Hellman parameters
@@ -280,6 +294,8 @@ pub struct EcdhParams {
     curve: EccCurve,
     /// This enclave's key id
     id: String,
+    /// Mask generating function
+    mgf: EcdhMgf,
     /// Other's public key as an uncompressed point for curves that support compressed points
     /// typically is 57, 65, 97, 129, 133, 193 bytes
     peer: EcPoint
@@ -335,6 +351,23 @@ pub enum EccCurve {
     /// BrainPool 512
     EcBP512,
 }
+
+/// Valid mask generating functions for Ecdh
+pub enum EcdhMgf {
+    Sha2_224,
+    Sha2_256,
+    Sha2_384,
+    Sha2_512,
+    Sha3_224,
+    Sha3_256,
+    Sha3_384,
+    Sha3_512,
+    Blake2_224,
+    Blake2_256,
+    Blake2_384,
+    Blake2_512,
+    Blake3_256,
+}
 ```
 
 Some capabilities offer multiple options like `DeriveDiffieHellman` which can be either PKCS#3 DHParameter structure
@@ -353,7 +386,8 @@ enclave provider that is to be supported.
 
 Another possibility is that this approach is too flexible and requires intimate knowledge about crypto algorithms.
 To mitigate this, predefined ciphers can be created for end consumers like RSA-3072-PSS-SHA256 or
-AES-256-GCM or AES-128-CBC-HMAC-SHA256 or XCHACHA20-POLY1305. This reduces algorithmic agility that is an inherent problem
+AES-256-GCM, AES-128-CBC-HMAC-SHA256, XCHACHA20-POLY1305, ED25519, ECDSA-SHA256, or ECIES-SHA512-AES-GCM.
+This reduces algorithmic agility that is an inherent problem
 with many cryptographic libraries. 
 
 # Rationale and alternatives
