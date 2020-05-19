@@ -1,3 +1,5 @@
+[//]: # (SPDX-License-Identifier: CC-BY-4.0)
+
 # Ursa RFCs
 [Ursa RFCs]: #ursa-rfcs
 
@@ -223,10 +225,14 @@ consensus and community norms, not impose more structure than necessary.
 ## License
 [License]: #license
 
-This repository is licensed under Apache License, Version 2.0,
-([LICENSE](./LICENSE) or
-http://www.apache.org/licenses/LICENSE-2.0)
+This repository is licensed under a Create Commons [Attribution 4.0 International (CC BY 4.0)](LICENSE).
+It is protected by a [Developer Certificate of Origin](https://developercertificate.org/) on every commit.
+This means that any contributions you make must be licensed in an CC-BY-4.0-compatible
+way, and must be free from patent encumbrances or additional terms and conditions. By
+raising a PR, you certify that this is the case for your contribution.
 
 ### Contributions
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion
+in the work by you, as defined in the Create Commons [Attribution 4.0 International (CC BY 4.0)](LICENSE),
+shall be licensed as above, without any additional terms or conditions.
