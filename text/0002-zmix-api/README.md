@@ -20,6 +20,15 @@ criteria for issuance, credential validity periods, and revocation registries if
 Ursa is beginning to have many primitives that serve to construct a la carte zero-knowledge methods. 
 Unfortunately, there hasn't been a project plan until now for organizing and layering these primitives together.
 
+There are two ways this can be done in Rust: feature flags or subprojects. Feature flags alone become complicated
+as projects grow confusing end consumers. Subprojects are great for organizing common features and code but 
+lines become blurred when common features surface. Zmix will use the best of both worlds. Similar to other rust projects, 
+Zmix will subdivide primitives into subprojects and provide a top level API for easy consumption like Serde, Rand, and Rayon.
+
+Serde provides a top level API that supports the common features used for serializing and deserializing data in Rust.
+The exact encodings are domain specific and left up to the end user, but included in projects by specifying either features
+in serde or including subprojects. Zmix will be organized in a similar way.
+
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
@@ -74,62 +83,96 @@ Verifiers validate received proofs and signatures. This RFC defines all function
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-This is the technical portion of the RFC. Explain the design in sufficient
-detail that:
+Zmix defines the common top layer for issuers, holders, verifiers and any other common methods used by all roles and
+zero-knowledge proof primitives. Each subcrate will hold only one primitive and all functionality associated therein.
 
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
-- Any new or altered interfaces should include pseudo-code.
+Below is the proposed structure
 
-The section should return to the examples given in the previous section, and
-explain more fully how the detailed proposal makes those examples work.
+```
+libzmix
+   |
+   --- zmix_common
+          |
+          --- utils
+              errors
+       zmix_signatures
+          |
+          --- bbs
+              ps
+              cl
+              cdlnt
+       zmix_accumulators
+          |
+          --- rsa
+              hyperelliptic
+              cks
+              merkle
+       zmix_predicates
+           |
+           --- bulletproofs
+               snarks
+               r1cs
+       zmix_core
+           |
+           --- issuer
+               holder
+               verifier
+       Cargo.toml
+```
+
+`common` is used for traits and logic shared across 2 or more subcrates.
+
+`core` is organized according to the three roles of the zero-knowledge protocols.
+
+`signatures` are signatures that can be used to generate signature proofs of knowledge with selective disclosure proofs.
+Current signatures known to support this scheme are [BBS+](https://crypto.stanford.edu/~xb/crypto04a/groupsigs.pdf), [CL](https://groups.csail.mit.edu/cis/pubs/lysyanskaya/cl02b.pdfhttps://groups.csail.mit.edu/cis/pubs/lysyanskaya/cl02b.pdf),
+[PS](https://eprint.iacr.org/2015/525.pdf), [CDLNT](https://eprint.iacr.org/2020/016.pdf), and [delegatable credentials](https://acmccs.github.io/papers/p683-camenischA.pdf). There will be common code shared among signatures
+like interfaces and errors.
+
+`accumulators` are used for zero-knowledge set memberships. Current known schemes are accumulators of unknown order like 
+[RSA](https://eprint.iacr.org/2018/1188.pdf) and [Hyperelliptic Curves](https://eprint.iacr.org/2020/196.pdf), Elliptic Curve based like [CKS](https://link.springer.com/content/pdf/10.1007%2F978-3-642-00468-1_27.pdf), and [Merkle Tree](https://eprint.iacr.org/2019/1255.pdf) based.
+
+`predicates` are proofs for testing ranges and inequalities of [numeric](https://eprint.iacr.org/2017/1066.pdf) inputs or
+             other miscellaneous circuit based proofs like [PLONK](https://eprint.iacr.org/2019/953.pdf) or [SPARTAN](https://eprint.iacr.org/2019/550.pdf) and
+             [Verifiable Encryption](https://www.shoup.net/papers/verenc.pdf)
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Why should we *not* do this?
+Creating the initial interfaces and APIs will be challenging and may slow down progress.
 
 # Rationale and alternatives
 [alternatives]: #alternatives
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not
-  choosing them?
-- What is the impact of not doing this?
-- For incorporating new protocol implementations what other implementations
-  exist and why were they not selected?
-- For new protocols, what related protocols exist and why do the not satisfy
-  requirements?
+The project could be organized by rust features alone. This has multiple drawbacks: cfg syntax sprinkled throughout the code,
+lots of combinations in Cargo.toml, and difficult to keep in mind all the various features when adding or modifying code. This makes 
+for a monolithic project that is consumable by users but requires documenting all features and complex combinations and coding
+for dangerous combinations.
+
+The project could be organized by just subcrates with no common API and consumers could pick and choose each one to use.
+The disadvantage is code duplication across projects.
 
 # Prior art
 [prior-art]: #prior-art
 
-Discuss prior art, both the good and the bad, in relation to this proposal.
-A few examples of what this can include are:
+## Good examples
 
-- For other teams: What lessons can we learn from what other communities have
-  done here?
-- Papers: Are there any published papers or great posts that discuss this? If
-  you have some relevant papers to refer to, this can serve as a more detailed
-  theoretical background.
+[Rand](https://github.com/rust-random/rand)
 
-This section is intended to encourage you as an author to think about the
-lessons from other distributed ledgers or cryptographic libraries and provide
-readers of your RFC with a fuller picture.  
+[Crossbeam](https://github.com/crossbeam-rs/crossbeam)
+
+[RustCrypto Hashes](https://github.com/RustCrypto/hashes)
+
+[RustCrypto Encryption](https://github.com/RustCrypto/traits)
+
+## Bad examples
+
+[libursa](https://github.com/hyperledger/ursa/blob/master/libursa/Cargo.toml)
 
 # Unresolved questions
 [unresolved]: #unresolved-questions
 
-- What parts of the design do you expect to resolve through the RFC process
-  before this gets merged?
-- What parts of the design do you expect to resolve through the implementation
-  of this feature before stabilization?
-- What related issues do you consider out of scope for this RFC that could be
-  addressed in the future independently of the solution that comes out of this
-  RFC?
-
 # Changelog
 [changelog]: #changelog
 
-- [10 Jan 2019] - v2 - a one-line summary of the changes in this version.
+- [15 Jun 2020] - v1 - Initial draft
