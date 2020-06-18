@@ -46,16 +46,20 @@ Predicate proofs tend to center around proving subsets of details about attribut
 value. For example, revocation can be verified without revealing the credential identification number against a specific registry or
 the expiration date can be checked if the current date is less than the credentials validity period.
 
+This RFC does not cover communication between Issuers, Provers, or Verifiers.
+
 ## Issuers
 [issuers]: #issuers
-Issuers have the most complicated role due to the necessity of publishing signature verification keys to trusted oracles
-either under their control or another trusted party, managing to whom the credentials have been given, to be able to revoke them if incorrect data
-is signed or in the case of credential abuse or fraud. This RFC defines all functions needed by Issuers
+Issuers publish signature verification keys to trusted oracles, (either under their control or 
+the control of a trusted party) and manage credentials that have been issued (revoking
+them if incorrect data was signed or in the case of credential abuse or fraud). 
+
+This RFC defines the following functions needed by Issuers:
 
 - GenerateKeys: Create digital signature keys
 - GenerateSign: Create a digital signature
 - GenerateBlindSign: Create a blind digital signature
-- RevokeSignature: Revoke a digital signature either for incorrect data or behavior
+- RevokeSignature: Revoke a digital signature
 - UpdateKeys: Change digital signature keys to new keys or nullify to revoke
 - GenerateRevocationRegistry: Create a registry used for checking if a digital signature is currently valid
 - UpdateRevocationRegistry: Add or remove entries in a revocation registry or nullify to invalidate
