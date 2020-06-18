@@ -57,7 +57,7 @@ is signed or in the case of credential abuse or fraud. This RFC defines all func
 - GenerateBlindSign: Create a blind digital signature
 - RevokeSignature: Revoke a digital signature either for incorrect data or behavior
 - UpdateKeys: Change digital signature keys to new keys or nullify to revoke
-- GenerateRevocationRegistry: Create a revocation registry used for checking if a digital signature is currently vali
+- GenerateRevocationRegistry: Create a registry used for checking if a digital signature is currently valid
 - UpdateRevocationRegistry: Add or remove entries in a revocation registry or nullify to invalidate
 
 ## Holders
