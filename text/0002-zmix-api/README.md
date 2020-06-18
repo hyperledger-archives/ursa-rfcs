@@ -83,7 +83,7 @@ Verifiers validate received proofs and signatures. This RFC defines all function
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-Zmix defines the common top layer for issuers, holders, verifiers and any other common methods used by all roles and
+Zmix defines the common top layer for Issuers, Holders, Verifiers and any other common methods used by all roles and
 zero-knowledge proof primitives. Each subcrate will hold only one primitive and all functionality associated therein.
 
 Below is the proposed structure
