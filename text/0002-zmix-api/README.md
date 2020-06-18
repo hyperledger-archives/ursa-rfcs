@@ -63,8 +63,9 @@ is signed or in the case of credential abuse or fraud. This RFC defines all func
 ## Holders
 [holders]: #holders
 
-Holders are the most involved role in a zero-knowledge proof system. They hold data and prove statements about them to verifiers.
-Holders may receive credentials from other Issuers or self-attest data. This RFC defines all functions needed by Holders:
+Holders receive credentials from Issuers, hold data, and prove statements about data to Verifiers.
+The data included in proofs may be from credentials received from Issuers or self-attest data.
+This RFC defines the functions needed by Holders:
 
 - PrepareBlindSign: Prepare data to be signed blindly by an Issuer
 - UnblindSignature: Unblind a blind signature received from an Issuer
