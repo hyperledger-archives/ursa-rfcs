@@ -75,7 +75,8 @@ Holders may receive credentials from other Issuers or self-attest data. This RFC
 ## Verifiers
 [verifiers]: #verifiers
 
-Verifiers validate received proofs and signatures. This RFC defines all functions needed by Verifiers:
+Verifiers validate received proofs and signatures. 
+This RFC defines the following functions needed by Verifiers:
 
 - VerifySignature: Check if a signature is valid
 - VerifyProof: Verify a zero-knowledge proof: signature, commitment, and/or predicate.
