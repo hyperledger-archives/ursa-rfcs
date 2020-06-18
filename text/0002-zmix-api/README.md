@@ -144,13 +144,17 @@ Creating the initial interfaces and APIs will be challenging and may slow down p
 # Rationale and alternatives
 [alternatives]: #alternatives
 
-The project could be organized by rust features alone. This has multiple drawbacks: cfg syntax sprinkled throughout the code,
-lots of combinations in Cargo.toml, and difficult to keep in mind all the various features when adding or modifying code. This makes 
-for a monolithic project that is consumable by users but requires documenting all features and complex combinations and coding
-for dangerous combinations.
+The project could be organized by rust features alone. 
+This would have multiple drawbacks: 
+- cfg syntax sprinkled throughout the code,
+- lots of combinations in Cargo.toml, 
+- the difficulty of keeping in mind all the various features when adding or modifying code. 
+
+This would make for a monolithic project that is consumable by users but requires documenting all features 
+and complex combinations and coding for dangerous combinations.
 
 The project could be organized by just subcrates with no common API and consumers could pick and choose each one to use.
-The disadvantage is code duplication across projects.
+The disadvantage would be code duplication across projects and the lack of a common API.
 
 # Prior art
 [prior-art]: #prior-art
