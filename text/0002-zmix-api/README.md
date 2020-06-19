@@ -62,7 +62,8 @@ the credential validity period can be checked by comparing the current date to t
 
 1. Range proofs where a number is validated to be between an upper and lower bound.
 1. Membership proofs where a value is proven against a set of elements as inclusive (value is in the set) or exclusive (value is not in the set).
-1. Custom Circuit proofs where proofs do not fall in the previous two, typically custom logic (zk-SNARKs or R1CS circuits).
+1. Equality proofs where a value is tested against another value (inequality, equality of two non disclosed values).
+1. Custom Circuit proofs where proofs do not fall in the previous categories, typically custom logic (zk-SNARKs or R1CS circuits).
 
 This RFC does not cover communication between Issuers, Provers, or Verifiers.
 
