@@ -77,6 +77,8 @@ This RFC defines the functions needed by Holders:
 - GeneratePoCV: Create a zero-knowledge proof of committed values
 - GeneratePredicate: Create a predicate proof
 
+Predicates do not necessarily need to be tied to credentials to be used.
+
 ## Verifiers
 [verifiers]: #verifiers
 
@@ -128,7 +130,7 @@ libzmix
 
 `common` is used for traits and logic shared across 2 or more subcrates.
 
-`core` is organized according to the three roles of the zero-knowledge protocols.
+`core` is organized according to the three roles of the zero-knowledge protocols. This is the main crate that will be included in other projects.
 
 `signatures` are signatures that can be used to generate signature proofs of knowledge with selective disclosure proofs.
 Current signatures known to support this scheme are [BBS+](https://crypto.stanford.edu/~xb/crypto04a/groupsigs.pdf), [CL](https://groups.csail.mit.edu/cis/pubs/lysyanskaya/cl02b.pdfhttps://groups.csail.mit.edu/cis/pubs/lysyanskaya/cl02b.pdf),
