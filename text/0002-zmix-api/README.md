@@ -196,6 +196,8 @@ The disadvantage would be code duplication across projects and the lack of a com
 
 [RustCrypto Encryption](https://github.com/RustCrypto/traits)
 
+[Accumulators](https://github.com/mikelodder7/accumulator-rs)
+
 ## Bad examples
 
 [libursa](https://github.com/hyperledger/ursa/blob/master/libursa/Cargo.toml)
