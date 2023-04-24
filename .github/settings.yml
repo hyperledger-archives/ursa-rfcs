@@ -1,0 +1,10 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+repository:
+  name: ursa-rfcs
+  description: Hyperledger Ursa has moved to end-of-life status.
+  homepage: https://wiki.hyperledger.org/display/ursa
+  default_branch: main
+  archived: true
